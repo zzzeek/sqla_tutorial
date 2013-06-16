@@ -734,11 +734,18 @@ Consistency
 
 :term:`Consistency` encompasses the ability of the database to ensure that it
 always remains in a valid state after a transaction completes successfully.
-Key elements used to provide consistency are :term:`constraints`, :term:`cascades`,
+When we say a database is "consistent", this includes among other things that
+:term:`constraints` are satisified.  Some related concepts are :term:`cascades`,
 and :term:`triggers`.
 
-Data constraints, the most common system used to define consistency,
-establish rules that are checked against changes in data as those changes
+Data Constraints
+^^^^^^^^^^^^^^^^
+
+While consistency really refers to a complex system employed by the database
+to maintain data integrity, as end users we will often think of "consistent" in
+terms of the contraints we've
+established.  Data constraints are programmer-established rules that are checked
+against changes in data as those changes
 are invoked against the database. Typical constraints include:
 
     * NOT NULL constraint - value in a column may never be NULL or non-present.
@@ -837,10 +844,11 @@ Historically, this is due to the fact that
 a lower level of isolation has less of a need to synchronize concurrent operations
 using locks.   However, most modern relational databases employ a
 concept known as :term:`multi version concurrency control` in order to
-reduce or eliminate the need for locking, by assigning
-to each transaction a unique identifier that is then applied to *copies* of rows
-created locally to each transaction.  As a transaction commits its data, its private copies
-of rows become the official "rows of record" for the database as a whole.
+reduce or eliminate the need for locking, which is able to maintain
+multiple "versions" of data at the same time, each of which can be accessed
+by independent transactions.  As a transaction commits its data, the
+version of data which it works with becomes the official "data of record"
+for the database as a whole.
 An MVCC scheme may still introduce performance overhead with higher isolation
 levels, as such systems must monitor and report so-called
 *serialization failures*, which are the rejection of transactions that
@@ -852,8 +860,9 @@ Durability
 ----------
 
 :term:`Durability` basically means that relational databases provide a guarantee that once a
-transaction COMMIT has succeeded, the data is safely written to disk, and the chance of
-that data being lost due to a system failure is low to nil.   Durability tends to be something
+transaction COMMIT has succeeded, the transaction logs have been written to non-volatile
+storage, so the chance of the transaction's committed state being lost due to a system
+failure is extremely low.   Durability tends to be something
 most developers take for granted when working with relational databases; however, in recent
 years it's been discussed a lot more with the rise of so-called NoSQL databases, which in some
 cases attempt to scale back the promise of durability in exchange for faster transaction

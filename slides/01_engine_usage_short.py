@@ -106,20 +106,3 @@ with engine.begin() as conn:
 
 
 ### slide::
-### title:: Exercises
-# Assuming this table:
-#
-#     CREATE TABLE employee (
-#         emp_id INTEGER PRIMARY KEY,
-#         emp_name VARCHAR(30)
-#     }
-#
-# And using the "engine.execute()" method to invoke a statement:
-#
-# 1. Execute an INSERT statement that will insert the row with emp_name='dilbert'.
-#    The primary key column can be omitted so that it is generated automatically.
-#
-# 2. SELECT all rows from the employee table.
-#
-
-### slide::

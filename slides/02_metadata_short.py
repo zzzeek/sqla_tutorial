@@ -113,27 +113,6 @@ published_table = Table('published', metadata,
 metadata.create_all(engine)
 
 
-### slide::
-### title:: Exercises
-# 1. Write a Table construct corresponding to this CREATE TABLE
-#    statement.
-#
-# CREATE TABLE network (
-#      network_id INTEGER PRIMARY KEY,
-#      name VARCHAR(100) NOT NULL,
-#      created_at DATETIME NOT NULL,
-#      owner_id INTEGER,
-#      FOREIGN KEY owner_id REFERENCES user(id)
-# )
-#
-# 2. Then emit metadata.create_all(), which will
-# emit CREATE TABLE for this table (it will skip
-# those that already exist).
-#
-# The necessary types are imported here:
-
-from sqlalchemy import Integer, String, DateTime
-
 ### slide:: p
 ### title:: Reflection
 # 'reflection' refers to loading Table objects based on
@@ -165,15 +144,5 @@ inspector.get_columns('address')
 # constraints
 inspector.get_foreign_keys('address')
 
-### slide::
-### title:: Exercises
-#
-# 1. Using 'metadata2', reflect the "network" table in the same way
-#    we just did 'user', then display the columns (or bonus, display
-#    just the column names)
-#
-# 2. Using "inspector", print a list of all table names that
-#    include a column called "story_id"
-#
 
 ### slide::

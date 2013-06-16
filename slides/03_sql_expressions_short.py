@@ -110,17 +110,6 @@ engine.execute(
         user_table.select().where(user_table.c.username == 'ed')
     )
 
-### slide::
-### title:: Exercises
-# Produce these expressions using "user_table.c.fullname",
-# "user_table.c.id", and "user_table.c.username":
-#
-# 1. user.fullname = 'ed'
-#
-# 2. user.fullname = 'ed' AND user.id > 5
-#
-# 3. user.username = 'edward' OR (user.fullname = 'ed' AND user.id > 5)
-#
 
 
 ### slide:: p
@@ -186,21 +175,6 @@ select_stmt = select([user_table]).\
                     order_by(user_table.c.username)
 print(conn.execute(select_stmt).fetchall())
 
-### slide::
-### title:: Exercises
-# 1. use user_table.insert() and "r = conn.execute()" to emit this
-# statement:
-#
-# INSERT INTO user (username, fullname) VALUES ('dilbert', 'Dilbert Jones')
-#
-# 2. What is the value of 'user.id' for the above INSERT statement?
-#
-# 3. Using "select([user_table])", execute this SELECT:
-#
-# SELECT id, username, fullname FROM user WHERE username = 'wendy' OR
-#   username = 'dilbert' ORDER BY fullname
-#
-#
 
 ### slide:: p
 ### title:: Joins / Foreign Keys
@@ -292,14 +266,6 @@ username_plus_count = select([
 
 conn.execute(username_plus_count).fetchall()
 
-### slide::
-### title:: Exercises
-# Produce this SELECT:
-#
-# SELECT fullname, email_address FROM user JOIN address
-#   ON user.id = address.user_id WHERE username='ed'
-#   ORDER BY email_address
-#
 
 ### slide::
 ### title:: Scalar selects, updates, deletes
@@ -352,21 +318,5 @@ result = conn.execute(delete_stmt)
 # by the WHERE clause.
 result.rowcount
 
-
-### slide::
-### title:: Exercises
-# 1. Execute this UPDATE - keep the "result" that's returned
-#
-#    UPDATE user SET fullname='Ed Jones' where username='ed'
-#
-# 2. how many rows did the above statement update?
-#
-# 3. Tricky bonus!  Combine update() along with select().as_scalar()
-#    to execute this UPDATE:
-#
-#    UPDATE user SET fullname=fullname ||
-#        (select email_address FROM address WHERE user_id=user.id)
-#       WHERE username IN ('jack', 'wendy')
-#
 
 ### slide::

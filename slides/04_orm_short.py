@@ -150,24 +150,6 @@ fake_user in session
 session.query(User).filter(User.name.in_(['ed', 'fakeuser'])).all()
 
 ### slide::
-### title:: Exercises - Basic Mapping
-#
-# 1. Create a class/mapping for this table, call the class Network
-#
-# CREATE TABLE network (
-#      network_id INTEGER PRIMARY KEY,
-#      name VARCHAR(100) NOT NULL,
-# )
-#
-# 2. emit Base.metadata.create_all(engine) to create the table
-#
-# 3. commit a few Network objects to the database:
-#
-# Network(name='net1'), Network(name='net2')
-#
-#
-
-### slide::
 ### title:: ORM Querying
 # The attributes on our mapped class act like Column objects, and
 # produce SQL expressions.
@@ -282,18 +264,6 @@ query.one()
 
 query = session.query(User)
 query.one()
-
-### slide::
-### title:: Exercises - ORM Querying
-# 1. Produce a Query object representing the list of "fullname" values for
-#    all User objects in alphabetical order.
-#
-# 2. call .all() on the query to make sure it works!
-#
-# 3. build a second Query object from the first that also selects
-#    only User rows with the name "mary" or "ed".
-#
-# 4. return only the second row of the Query from #3.
 
 
 ### slide::
@@ -436,17 +406,6 @@ subq = session.query(
 session.query(User.name, func.coalesce(subq.c.count, 0)).\
             outerjoin(subq, User.id == subq.c.user_id).all()
 
-### slide::
-### title:: Exercises
-# 1. Run this SQL JOIN:
-#
-#    SELECT user.name, address.email_address FROM user
-#    JOIN address ON user.id=address.user_id WHERE
-#    address.email_address='j25@yahoo.com'
-#
-# 2. Tricky Bonus!  Select all pairs of distinct user names.
-#    Hint: "... ON user_alias1.name < user_alias2.name"
-#
 
 ### slide:: p
 ### title:: Eager Loading
@@ -530,38 +489,6 @@ session.commit()
 session.delete(jack)
 session.commit()
 
-### slide::
-### title:: Exercises - Final Exam !
-# 1. Create a class called 'Account', with table "account":
-#
-#      id = Column(Integer, primary_key=True)
-#      owner = Column(String(50), nullable=False)
-#      balance = Column(Numeric, default=0)
-#
-# 2. Create a class "Transaction", with table "transaction":
-#      * Integer primary key
-#      * numeric "amount" column
-#      * Integer "account_id" column with ForeignKey('account.id')
-#
-# 3. Add a relationship() on Transaction named "account", which refers
-#    to "Account", and has a backref called "transactions".
-#
-# 4. Create a database, create tables, then insert these objects:
-#
-#      a1 = Account(owner='Jack Jones', balance=5000)
-#      a2 = Account(owner='Ed Rendell', balance=10000)
-#      Transaction(amount=500, account=a1)
-#      Transaction(amount=4500, account=a1)
-#      Transaction(amount=6000, account=a2)
-#      Transaction(amount=4000, account=a2)
-#
-# 5. Produce a report that shows:
-#     * account owner
-#     * account balance
-#     * summation of transaction amounts per account (should match balance)
-#       A column can be summed using func.sum(Transaction.amount)
-#
-from sqlalchemy import Integer, String, Numeric
 
 ### slide::
 

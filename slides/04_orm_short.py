@@ -157,20 +157,8 @@ session.query(User).filter(User.name.in_(['ed', 'fakeuser'])).all()
 print(User.name == "ed")
 
 ### slide:: p
-# These SQL expressions are compatible with the select() object
-# we introduced earlier.
-
-from sqlalchemy import select
-
-sel = select([User.name, User.fullname]).\
-        where(User.name == 'ed').\
-        order_by(User.id)
-
-session.connection().execute(sel).fetchall()
-
-
-### slide:: p
-# but when using the ORM, the Query() object provides a lot more functionality,
+# This works similarly as the core select(), but Query()
+# object provides a lot more functionality,
 # here selecting the User *entity*.
 
 query = session.query(User).filter(User.name == 'ed').order_by(User.id)
@@ -226,7 +214,7 @@ for name, in session.query(User.name).\
     print(name)
 
 ### slide::
-# multiple filter() calls join by AND just like select().where()
+# multiple filter() calls join by AND
 
 for user in session.query(User).\
                         filter(User.name == 'ed').\
@@ -376,6 +364,13 @@ session.query(User.name).join(User.addresses).\
 session.query(User, Address).select_from(Address).join(Address.user).all()
 
 ### slide:: p
+# There are also some "EXISTS" operators, any() and has().
+# A common use is to select all User objects that have no
+# addresses - "not any":
+
+session.query(User).filter(~User.addresses.any()).all()
+
+### slide:: p
 # A query that refers to the same entity more than once in the FROM
 # clause requires *aliasing*.
 
@@ -389,7 +384,7 @@ session.query(User).\
         filter(a2.email_address == 'jack@hotmail.com').\
         all()
 
-### slide:: p
+### slide::
 # We can also join with subqueries.  subquery() returns
 # an "alias" construct for us to use.
 
@@ -402,6 +397,19 @@ subq = session.query(
                 join(Address.user).\
                 group_by(User.id).\
                 subquery()
+
+
+### slide:: p
+# The subquery object is a "selectable", and acts like a core
+# Table, including a ".c." attribute for its columns
+
+from sqlalchemy import select
+
+print select([subq.c.count, subq.c.user_id]).where(subq.c.user_id == 5)
+
+### slide:: p
+# To join from User to our subquery, we treat it like any other
+# "selectable".
 
 session.query(User.name, func.coalesce(subq.c.count, 0)).\
             outerjoin(subq, User.id == subq.c.user_id).all()

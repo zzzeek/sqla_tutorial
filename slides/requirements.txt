@@ -1,0 +1,4 @@
+SQLAlchemy==0.8.0
+sliderepl==1.1
+Pygments==1.6
+argparse>=1.1

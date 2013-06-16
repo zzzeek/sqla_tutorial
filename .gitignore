@@ -1,0 +1,14 @@
+doc/build
+*.pyc
+*.swp
+*.orig
+objects.inv
+build
+tmp
+dist
+.venv
+.venv3
+.coverage
+.DS_Store
+.buildinfo
+*.db

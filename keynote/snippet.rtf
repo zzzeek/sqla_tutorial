@@ -1,0 +1,16 @@
+{\rtf1\ansi\deff0{\fonttbl{\f0\fmodern\fprq1\fcharset0;}}{\colortbl;\red128\green128\blue128;\red186\green33\blue33;\red0\green64\blue208;\red102\green102\blue102;\red64\green128\blue128;\red160\green160\blue0;\red25\green23\blue124;\red0\green128\blue0;\red187\green102\blue136;\red187\green102\blue34;\red136\green0\blue0;\red170\green34\blue255;\red153\green153\blue153;\red0\green160\blue0;\red160\green0\blue0;\red255\green0\blue0;\red128\green0\blue128;\red176\green0\blue64;\red0\green0\blue255;\red187\green187\blue187;\red188\green122\blue0;\red0\green0\blue128;\red125\green144\blue41;\red210\green65\blue58;}\f0{\cf5\i # class is declared without any awareness of database}\par
+{\cf8\b class} {\cf19\b User}({\cf8 object}):\par
+    {\cf8\b def} {\cf19 __init__}({\cf8 self}, name, username):\par
+        {\cf8 self}{\cf4 .}name {\cf4 =} name\par
+        {\cf8 self}{\cf4 .}username {\cf4 =} username\par
+\par
+\par
+{\cf5\i # elsewhere, it's associated with a database table}\par
+mapper(\par
+     User,\par
+     Table({\cf2 "}{\cf2 user}{\cf2 "}, metadata,\par
+           Column({\cf2 "}{\cf2 name}{\cf2 "}, String({\cf4 50})),\par
+           Column({\cf2 "}{\cf2 fullname}{\cf2 "}, String({\cf4 100}))\par
+     )\par
+)\par
+}

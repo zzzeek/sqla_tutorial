@@ -81,9 +81,13 @@ print(user_table.c.fullname + "some name")
 print(user_table.c.username.in_(["wendy", "mary", "ed"]))
 
 ### slide::
-# the Compiled object also converts literal values to "bound"
-# parameters.
+# The "bound" placeholders take the place of literal values,
+# which are stored away for use when the statement is executed.
 
+expression = user_table.c.username == 'ed'
+print(expression)
+
+### slide:: i
 compiled = expression.compile()
 compiled.params
 
@@ -124,9 +128,9 @@ for row in result:
 ### slide:: p
 # to round out INSERT and SELECT, this is an UPDATE
 
-update_stmt = address_table.update().\
-                    values(email_address="jack@msn.com").\
-                    where(address_table.c.email_address == "jack@yahoo.com")
+update_stmt = user_table.update().\
+                    values(fullname="Jack Brown").\
+                    where(user_table.c.username == "jack")
 
 result = conn.execute(update_stmt)
 
@@ -145,8 +149,8 @@ conn.execute(select([user_table])).fetchall()
 ### slide:: p
 # and this is a DELETE
 
-delete_stmt = address_table.delete().\
-                where(address_table.c.email_address == "ed@ed.com")
+delete_stmt = user_table.delete().\
+                where(user_table.c.username == 'jack')
 
 result = conn.execute(delete_stmt)
 

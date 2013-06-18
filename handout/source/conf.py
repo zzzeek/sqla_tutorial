@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# PyCon 2013 - Introduction to SQLAlchemy documentation build configuration file, created by
+# Introduction to SQLAlchemy documentation build configuration file, created by
 # sphinx-quickstart on Sat Feb  9 12:25:11 2013.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -42,7 +42,7 @@ nitpicky = True
 master_doc = 'index'
 
 # General information about the project.
-project = u'PyCon 2013 - Introduction to SQLAlchemy'
+project = u'Introduction to SQLAlchemy'
 copyright = u'2013, Michael Bayer'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -60,7 +60,7 @@ release = '1'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
-today = 'March 14, 2013'
+today = 'June 17, 2013'
 # Else, today_fmt is used as the format for a strftime call.
 #today_fmt = '%B %d, %Y'
 
@@ -166,7 +166,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'PyCon2013-IntroductiontoSQLAlchemydoc'
+htmlhelp_basename = 'IntroductiontoSQLAlchemydoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -185,7 +185,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'handout.tex', u'PyCon 2013 - Introduction to SQLAlchemy',
+  ('index', 'handout.tex', u'Introduction to SQLAlchemy',
    u'Michael Bayer', 'manual'),
 ]
 
@@ -221,7 +221,7 @@ latex_elements = {
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'pycon2013-introductiontosqlalchemy', u'PyCon 2013 - Introduction to SQLAlchemy',
+    ('index', 'introductiontosqlalchemy', u'Introduction to SQLAlchemy',
      [u'Michael Bayer'], 1)
 ]
 
@@ -235,8 +235,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'PyCon2013-IntroductiontoSQLAlchemy', u'PyCon 2013 - Introduction to SQLAlchemy',
-   u'Michael Bayer', 'PyCon2013-IntroductiontoSQLAlchemy', 'One line description of project.',
+  ('index', 'IntroductiontoSQLAlchemy', u'Introduction to SQLAlchemy',
+   u'Michael Bayer', 'IntroductiontoSQLAlchemy', 'One line description of project.',
    'Miscellaneous'),
 ]
 

@@ -105,7 +105,7 @@ with engine.begin() as conn:
     conn.execute("update employee_of_month set emp_name = :emp_name", emp_name="mary")
 
 
-### slide::
+### slide:: l
 ### title:: Exercises
 # Assuming this table:
 #

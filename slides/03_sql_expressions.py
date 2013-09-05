@@ -81,6 +81,13 @@ print(user_table.c.fullname + "some name")
 print(user_table.c.username.in_(["wendy", "mary", "ed"]))
 
 ### slide::
+# The "bound" placeholders take the place of literal values,
+# which are stored away for use when the statement is executed.
+
+expression = user_table.c.username == 'ed'
+print(expression)
+
+### slide:: l
 # Expressions produce different strings according to *dialect*
 # objects.
 
@@ -110,7 +117,7 @@ engine.execute(
         user_table.select().where(user_table.c.username == 'ed')
     )
 
-### slide::
+### slide:: l
 ### title:: Exercises
 # Produce these expressions using "user_table.c.fullname",
 # "user_table.c.id", and "user_table.c.username":
@@ -131,10 +138,6 @@ insert_stmt = user_table.insert().values(username='ed', fullname='Ed Jones')
 conn = engine.connect()
 result = conn.execute(insert_stmt)
 
-### slide:: i
-# executing an insert() gives us the "last inserted id"
-result.inserted_primary_key
-
 ### slide:: p
 # insert() and other DML can run multiple parameters at once.
 
@@ -153,13 +156,13 @@ result = conn.execute(select_stmt)
 for row in result:
     print(row)
 
-### slide:: p
+### slide:: lp
 # select all columns from a table
 
 select_stmt = select([user_table])
 conn.execute(select_stmt).fetchall()
 
-### slide:: p
+### slide:: lp
 # specify a WHERE clause
 
 select_stmt = select([user_table]).\
@@ -171,7 +174,7 @@ select_stmt = select([user_table]).\
                     )
 conn.execute(select_stmt).fetchall()
 
-### slide:: p
+### slide:: lp
 # specify multiple WHERE, will be joined by AND
 
 select_stmt = select([user_table]).\
@@ -179,14 +182,8 @@ select_stmt = select([user_table]).\
                     where(user_table.c.fullname == 'ed jones')
 conn.execute(select_stmt).fetchall()
 
-### slide:: p
-# ordering is applied using order_by()
 
-select_stmt = select([user_table]).\
-                    order_by(user_table.c.username)
-print(conn.execute(select_stmt).fetchall())
-
-### slide::
+### slide:: l
 ### title:: Exercises
 # 1. use user_table.insert() and "r = conn.execute()" to emit this
 # statement:
@@ -202,7 +199,7 @@ print(conn.execute(select_stmt).fetchall())
 #
 #
 
-### slide:: p
+### slide:: lp
 ### title:: Joins / Foreign Keys
 # We create a new table to illustrate multi-table operations
 from sqlalchemy import ForeignKey
@@ -215,7 +212,7 @@ address_table = Table("address", metadata,
                       )
 metadata.create_all(engine)
 
-### slide:: p
+### slide:: lp
 # data
 conn.execute(address_table.insert(), [
     {"user_id": 1, "email_address": "ed@ed.com"},
@@ -224,7 +221,7 @@ conn.execute(address_table.insert(), [
     {"user_id": 3, "email_address": "wendy@gmail.com"},
 ])
 
-### slide::
+### slide:: l
 # two Table objects can be joined using join()
 #
 # <left>.join(<right>, [<onclause>]).
@@ -233,7 +230,7 @@ join_obj = user_table.join(address_table,
                             user_table.c.id == address_table.c.user_id)
 print(join_obj)
 
-### slide::
+### slide:: l
 # ForeignKey allows the join() to figure out the ON clause automatically
 
 join_obj = user_table.join(address_table)
@@ -245,7 +242,7 @@ print(join_obj)
 select_stmt = select([user_table, address_table]).select_from(join_obj)
 conn.execute(select_stmt).fetchall()
 
-### slide::
+### slide:: l
 # the select() object is a "selectable" just like Table.
 # it has a .c. attribute also.
 
@@ -256,7 +253,7 @@ print(
         where(select_stmt.c.username == 'ed')
    )
 
-### slide::
+### slide:: l
 # In SQL, a "subquery" is usually an alias() of a select()
 
 select_alias = select_stmt.alias()
@@ -265,7 +262,7 @@ print(
         where(select_alias.c.username == 'ed')
    )
 
-### slide::
+### slide:: l
 # A subquery against "address" counts addresses per user:
 
 from sqlalchemy import func
@@ -278,7 +275,7 @@ address_subq = select([
 print(address_subq)
 
 
-### slide:: i
+### slide:: li
 # we use join() to link the alias() with another select()
 
 username_plus_count = select([
@@ -288,11 +285,11 @@ username_plus_count = select([
                             user_table.join(address_subq)
                          ).order_by(user_table.c.username)
 
-### slide:: i
+### slide:: li
 
 conn.execute(username_plus_count).fetchall()
 
-### slide::
+### slide:: l
 ### title:: Exercises
 # Produce this SELECT:
 #
@@ -301,7 +298,7 @@ conn.execute(username_plus_count).fetchall()
 #   ORDER BY email_address
 #
 
-### slide::
+### slide:: l
 ### title:: Scalar selects, updates, deletes
 # a *scalar select* returns exactly one row and one column
 
@@ -311,7 +308,7 @@ address_sel = select([
                 where(user_table.c.id == address_table.c.user_id)
 print(address_sel)
 
-### slide:: ip
+### slide:: lip
 # scalar selects can be used in column expressions,
 # specify it using as_scalar()
 
@@ -321,9 +318,9 @@ conn.execute(select_stmt).fetchall()
 ### slide:: p
 # to round out INSERT and SELECT, this is an UPDATE
 
-update_stmt = address_table.update().\
-                    values(email_address="jack@msn.com").\
-                    where(address_table.c.email_address == "jack@yahoo.com")
+update_stmt = user_table.update().\
+                    values(fullname="Jack Brown").\
+                    where(user_table.c.username == "jack")
 
 result = conn.execute(update_stmt)
 
@@ -342,18 +339,12 @@ conn.execute(select([user_table])).fetchall()
 ### slide:: p
 # and this is a DELETE
 
-delete_stmt = address_table.delete().\
-                where(address_table.c.email_address == "ed@ed.com")
+delete_stmt = user_table.delete().\
+                where(user_table.c.username == 'jack')
 
 result = conn.execute(delete_stmt)
 
-### slide:: i
-# UPDATE and DELETE have a "rowcount", number of rows matched
-# by the WHERE clause.
-result.rowcount
-
-
-### slide::
+### slide:: l
 ### title:: Exercises
 # 1. Execute this UPDATE - keep the "result" that's returned
 #

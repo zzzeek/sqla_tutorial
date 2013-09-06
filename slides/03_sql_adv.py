@@ -1,5 +1,5 @@
 ### slide::
-### title:: Joins / Foreign Keys
+### title:: Core Joins / Foreign Keys / Subqueries
 # We start with two tables this time.
 from sqlalchemy import MetaData, Table, Column, String, Integer, select
 
@@ -10,7 +10,7 @@ user_table = Table('user', metadata,
                     Column('fullname', String(50))
                    )
 
-### slide:: p
+### slide::
 # Then a second table to illustrate multi-table operations
 from sqlalchemy import ForeignKey
 

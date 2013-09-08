@@ -182,9 +182,6 @@ session.query(User.name, func.coalesce(subq.c.count, 0)).\
 #    JOIN address ON user.id=address.user_id WHERE
 #    address.email_address='j25@yahoo.com'
 #
-# 2. Tricky Bonus!  Select all pairs of distinct user names.
-#    Hint: "... ON user_alias1.name < user_alias2.name"
-#
 
 ### slide:: p
 ### title:: Eager Loading

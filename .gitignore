@@ -2,6 +2,7 @@ doc/build
 *.pyc
 *.swp
 *.orig
+*.zip
 objects.inv
 build
 tmp

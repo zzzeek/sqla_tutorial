@@ -142,4 +142,25 @@ select_stmt = select([user_table.c.username, address_sel.as_scalar()])
 conn.execute(select_stmt).fetchall()
 
 
+### slide:: l
+### title:: Exercises
+# Using user_table.update() in conjunction with select().as_scalar(),
+# construct and execute this UPDATE:
+#
+#    UPDATE user SET fullname=fullname ||
+#        (select email_address FROM address WHERE user_id=user.id)
+#       WHERE username IN ('jack', 'wendy')
+#
+# Hints:
+#
+# 1. First construct the "select" statement, assign it to a variable,
+#    then use that variable in a second statement representing the UPDATE.
+#
+# 2. The "values" method of update() takes keyword column names,
+#    e.g. upd.values(fullname = <expression>)
+#
+# 3. to concatenate string values, use +, e.g. user_table.c.fullname + my_scalar_select
+#
+# 4. use user_table.c.username.in_() to produce the IN expression
+#
 ### slide::

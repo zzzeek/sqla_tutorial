@@ -91,17 +91,17 @@ print(expression)
 # Expressions produce different strings according to *dialect*
 # objects.
 
-expression = user_table.c.username == 'ed'
-
-### slide:: i
-# MySQL....
-from sqlalchemy.dialects import mysql
-print(expression.compile(dialect=mysql.dialect()))
+expression = user_table.c.fullname + "some name"
 
 ### slide:: i
 # PostgreSQL...
 from sqlalchemy.dialects import postgresql
 print(expression.compile(dialect=postgresql.dialect()))
+
+### slide:: i
+# MySQL....
+from sqlalchemy.dialects import mysql
+print(expression.compile(dialect=mysql.dialect()))
 
 ### slide::
 # the Compiled object also converts literal values to "bound"
@@ -190,12 +190,10 @@ conn.execute(select_stmt).fetchall()
 #
 # INSERT INTO user (username, fullname) VALUES ('dilbert', 'Dilbert Jones')
 #
-# 2. What is the value of 'user.id' for the above INSERT statement?
-#
-# 3. Using "select([user_table])", execute this SELECT:
+# 2. Using "select([user_table])", execute this SELECT:
 #
 # SELECT id, username, fullname FROM user WHERE username = 'wendy' OR
-#   username = 'dilbert' ORDER BY fullname
+#   username = 'dilbert'
 #
 #
 
@@ -230,18 +228,16 @@ result = conn.execute(delete_stmt)
 
 ### slide:: l
 ### title:: Exercises
-# 1. Execute this UPDATE - keep the "result" that's returned
+# 1. Execute this UPDATE - keep the "result" that's returned by
+#    conn.execute() (e.g. result = conn.execute(stmt))
 #
-#    UPDATE user SET fullname='Ed Jones' where username='ed'
+#    UPDATE user SET fullname='Ed Jones' WHERE username='ed'
 #
-# 2. how many rows did the above statement update?
+# 2. Examine result.rowcount, which will show how many rows were matched
 #
-# 3. Tricky bonus!  Combine update() along with select().as_scalar()
-#    to execute this UPDATE:
+# 3. delete the row with this statement:
 #
-#    UPDATE user SET fullname=fullname ||
-#        (select email_address FROM address WHERE user_id=user.id)
-#       WHERE username IN ('jack', 'wendy')
+#    DELETE FROM user WHERE username='ed'
 #
 
 ### slide::

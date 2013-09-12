@@ -19,7 +19,7 @@ familiar to catch up, while not spending too much time in the class
 itself with what may be review material for many.
 
 As an optional task, students may also
-to install and test the slide runner environment and application; the
+install and test the slide runner environment and application; the
 :doc:`setup` section describes these steps in detail, and includes
 getting students familiar with Python virtual environments if not already,
 getting the latest version of SQLAlchemy installed into the local

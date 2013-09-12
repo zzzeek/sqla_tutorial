@@ -60,14 +60,15 @@ directory.
 
 Steps to install:
 
-1. If virtualenv is not installed locally, or you're not sure, the
-   ``install_venv.py`` script will install everything including virtualenv.
+1. If virtualenv is not installed locally, or if you're not sure, the
+   ``install_venv.py`` script will install using a local virtualenv script.
    Assuming a Python intepreter is in the path::
 
       $ python install_venv.py
 
    This script will create a virtual Python environment in the local directory
-   ``.venv`` which will then contain the full environment.
+   ``.venv`` into which it will then run the ``install.py`` script to install
+   the rest of the libraries.
 
 2. If the local workstation does have virtualenv installed, it can be run
    manually::
@@ -75,8 +76,8 @@ Steps to install:
       $ virtualenv .venv
 
    This will create a virtual Python environment in the directory ``.venv``.
-   The ``install.py`` script will then setup libraries in this
-   environment. On Linux/OSX::
+   The ``install.py`` script should then be run, which will then setup
+   libraries in this environment. On Linux/OSX::
 
 	     $ .venv/bin/python install.py
 
@@ -87,7 +88,7 @@ Steps to install:
 3. Once ``.venv`` is present and the libraries are installed, a
    particular tutorial script can be run using the ``sliderepl`` program.
 
-   On Linux OSX::
+   On Linux/OSX::
 
 	     $ .venv/bin/sliderepl 01_engine_usage.py
 

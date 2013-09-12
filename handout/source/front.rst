@@ -18,16 +18,16 @@ it available ahead of time will hopefully allow those who are less
 familiar to catch up, while not spending too much time in the class
 itself with what may be review material for many.
 
-.. A second task that would be extremely helpful would be for students
-	to install and test the slide runner environment and application; the
-	:doc:`setup` section describes these steps in detail, and includes
-	getting students familiar with Python virtual environments if not already,
-	getting the latest version of SQLAlchemy installed into the local
-	(non-system-wide) environment, and ensuring that the tutorial slides
-	can be run successfully.  In the actual class, we'll spend a lot of time
-	stepping through these slides, and students can step through the same
-	slides locally on their machines as well as attempt other experiments
-	and exercises within the environment.
+As an optional task, students may also
+to install and test the slide runner environment and application; the
+:doc:`setup` section describes these steps in detail, and includes
+getting students familiar with Python virtual environments if not already,
+getting the latest version of SQLAlchemy installed into the local
+(non-system-wide) environment, and ensuring that the tutorial slides
+can be run successfully.  In the actual class, we'll spend a lot of time
+stepping through these slides, and students can step through the same
+slides locally on their machines as well as attempt other experiments
+and exercises within the environment.
 
 Two other sections, :doc:`glossary` and :doc:`reading`, represent more
 detailed paths for learning.  The glossary is broken into two sections:

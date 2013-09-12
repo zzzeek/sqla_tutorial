@@ -1,3 +1,5 @@
+all: zip
+
 zip: sqlalchemy_tutorial.zip
 
 sqlalchemy_tutorial.zip: build/handout.pdf build/sw build
@@ -11,3 +13,9 @@ build/sw: build
 
 build:
 	mkdir build
+
+cleanpdf:
+	cd handout; make clean; cd ..;
+
+clean: cleanpdf
+	rm -fr build

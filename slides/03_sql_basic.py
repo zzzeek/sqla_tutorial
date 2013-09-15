@@ -87,6 +87,20 @@ print(user_table.c.username.in_(["wendy", "mary", "ed"]))
 expression = user_table.c.username == 'ed'
 print(expression)
 
+### slide::
+# the values of our "bound" parameters are still there, however,
+# stored away within a structure called the "compiled" object
+compiled = expression.compile()
+compiled.params
+
+### slide::
+# The "bound" parameters are extracted when we execute()
+
+engine.execute(
+        user_table.select().where(user_table.c.username == 'ed')
+    )
+
+
 ### slide:: l
 # Expressions produce different strings according to *dialect*
 # objects.
@@ -102,20 +116,6 @@ print(expression.compile(dialect=postgresql.dialect()))
 # MySQL....
 from sqlalchemy.dialects import mysql
 print(expression.compile(dialect=mysql.dialect()))
-
-### slide::
-# the Compiled object also converts literal values to "bound"
-# parameters.
-
-compiled = expression.compile()
-compiled.params
-
-### slide::
-# The "bound" parameters are extracted when we execute()
-
-engine.execute(
-        user_table.select().where(user_table.c.username == 'ed')
-    )
 
 ### slide:: l
 ### title:: Exercises

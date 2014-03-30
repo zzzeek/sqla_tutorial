@@ -35,8 +35,8 @@ Environment Install Prerequisites
 This section will discuss the prerequisites to installing the sample
 SQLAlchemy environment and slide runner application.
 
-A minimum version of Python 2.6 is recommended;
-Python 2.7, 3.1, 3.2 or 3.3 are also fine.
+A minimum version of Python 2.6 is recommended; Python 2.7
+as well as newer Python 3 versions (3.3, 3.4, etc.) are also fine.
 
 For database access, the tutorials use the SQLite_ database by default,
 which is included as part of the Python standard library.

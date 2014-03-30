@@ -43,7 +43,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Introduction to SQLAlchemy'
-copyright = u'2013, Michael Bayer'
+copyright = u'Michael Bayer'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -60,7 +60,7 @@ release = '1'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
-today = 'June 17, 2013'
+today = 'March 30, 2014'
 # Else, today_fmt is used as the format for a strftime call.
 #today_fmt = '%B %d, %Y'
 

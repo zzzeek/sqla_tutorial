@@ -9,7 +9,7 @@ build/handout.pdf: build
 	cd handout; make latexpdf; cp build/latex/handout.pdf ../build/; cd ..;
 
 build/sw: build
-	cd slides; cp *.py requirements.txt ../build/; cp -R sw	../build/; cd ..;
+	cd slides; cp *.py README requirements.txt ../build/; cp -R sw	../build/; cd ..;
 
 build:
 	mkdir build
@@ -17,5 +17,8 @@ build:
 cleanpdf:
 	cd handout; make clean; cd ..;
 
-clean: cleanpdf
+cleanzip:
+	rm sqlalchemy_tutorial.zip
+
+clean: cleanpdf cleanzip
 	rm -fr build

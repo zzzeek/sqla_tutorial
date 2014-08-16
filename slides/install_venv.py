@@ -11,7 +11,7 @@ win32 = sys.platform.startswith('win')
 
 if win32:
     os.system(r"%s virtualenv-1.10.1\virtualenv.py .venv" % sys.executable)
-    os.system(r".venv\Scripts\python.exe install.py")
+    os.system(r".venv\Scripts\python.exe _install.py")
 else:
     os.system("%s virtualenv-1.10.1/virtualenv.py .venv" % sys.executable)
-    os.system(".venv/bin/python install.py")
+    os.system(".venv/bin/python _install.py")

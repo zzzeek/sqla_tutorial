@@ -4,19 +4,20 @@
 
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
+
 Base = declarative_base()
 
+
 class User(Base):
-    __tablename__ = 'user'
+    __tablename__ = "user"
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
     fullname = Column(String)
 
     def __repr__(self):
-        return "<User(%r, %r)>" % (
-                self.name, self.fullname
-            )
+        return "<User(%r, %r)>" % (self.name, self.fullname)
+
 
 ### slide::
 # But then, we'll also add a second table.
@@ -24,12 +25,13 @@ class User(Base):
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 
+
 class Address(Base):
-    __tablename__ = 'address'
+    __tablename__ = "address"
 
     id = Column(Integer, primary_key=True)
     email_address = Column(String, nullable=False)
-    user_id = Column(Integer, ForeignKey('user.id'))
+    user_id = Column(Integer, ForeignKey("user.id"))
 
     user = relationship("User", backref="addresses")
 
@@ -41,37 +43,41 @@ class Address(Base):
 # Create tables
 
 from sqlalchemy import create_engine
-engine = create_engine('sqlite://')
+
+engine = create_engine("sqlite://")
 Base.metadata.create_all(engine)
 
 ### slide:: p
 # Insert data into the User table...
 
 from sqlalchemy.orm import Session
+
 session = Session(bind=engine)
 
-session.add_all([
-    User(name='ed', fullname='Ed Jones'),
-    User(name='wendy', fullname='Wendy Weathersmith'),
-    User(name='mary', fullname='Mary Contrary'),
-    User(name='fred', fullname='Fred Flinstone')
-])
+session.add_all(
+    [
+        User(name="ed", fullname="Ed Jones"),
+        User(name="wendy", fullname="Wendy Weathersmith"),
+        User(name="mary", fullname="Mary Contrary"),
+        User(name="fred", fullname="Fred Flinstone"),
+    ]
+)
 session.commit()
 
 ### slide::
 # a new User object also gains an empty "addresses" collection now.
 
-jack = User(name='jack', fullname='Jack Bean')
+jack = User(name="jack", fullname="Jack Bean")
 jack.addresses
 
 ### slide::
 # populate this collection with new Address objects.
 
 jack.addresses = [
-                Address(email_address='jack@gmail.com'),
-                Address(email_address='j25@yahoo.com'),
-                Address(email_address='jack@hotmail.com'),
-                ]
+    Address(email_address="jack@gmail.com"),
+    Address(email_address="j25@yahoo.com"),
+    Address(email_address="jack@hotmail.com"),
+]
 
 ### slide::
 # the "backref" sets up Address.user for each User.address.
@@ -102,7 +108,7 @@ jack.addresses
 # collections and references are updated by manipulating objects,
 # not primary / foreign key values.
 
-fred = session.query(User).filter_by(name='fred').one()
+fred = session.query(User).filter_by(name="fred").one()
 jack.addresses[1].user = fred
 
 fred.addresses
@@ -135,8 +141,9 @@ session.query(User, Address).join(Address).all()
 ### slide:: p
 # Either User or Address may be referred to anywhere in the query.
 
-session.query(User.name).join(User.addresses).\
-    filter(Address.email_address == 'jack@gmail.com').first()
+session.query(User.name).join(User.addresses).filter(
+    Address.email_address == "jack@gmail.com"
+).first()
 
 ### slide:: p
 # we can specify an explicit FROM using select_from().
@@ -150,12 +157,9 @@ session.query(User, Address).select_from(Address).join(Address.user).all()
 from sqlalchemy.orm import aliased
 
 a1, a2 = aliased(Address), aliased(Address)
-session.query(User).\
-        join(a1).\
-        join(a2).\
-        filter(a1.email_address == 'jack@gmail.com').\
-        filter(a2.email_address == 'jack@hotmail.com').\
-        all()
+session.query(User).join(a1).join(a2).filter(
+    a1.email_address == "jack@gmail.com"
+).filter(a2.email_address == "jack@hotmail.com").all()
 
 ### slide:: p
 # We can also join with subqueries.  subquery() returns
@@ -163,16 +167,18 @@ session.query(User).\
 
 from sqlalchemy import func
 
-subq = session.query(
-                func.count(Address.id).label('count'),
-                User.id.label('user_id')
-                ).\
-                join(Address.user).\
-                group_by(User.id).\
-                subquery()
+subq = (
+    session.query(
+        func.count(Address.id).label("count"), User.id.label("user_id")
+    )
+    .join(Address.user)
+    .group_by(User.id)
+    .subquery()
+)
 
-session.query(User.name, func.coalesce(subq.c.count, 0)).\
-            outerjoin(subq, User.id == subq.c.user_id).all()
+session.query(User.name, func.coalesce(subq.c.count, 0)).outerjoin(
+    subq, User.id == subq.c.user_id
+).all()
 
 ### slide::
 ### title:: Exercises
@@ -216,10 +222,12 @@ for user in session.query(User).options(joinedload(User.addresses)):
 # eager loading *does not* change the *result* of the Query.
 # only how related collections are loaded.
 
-for address in session.query(Address).\
-                join(Address.user).\
-                filter(User.name == 'jack').\
-                options(joinedload(Address.user)):
+for address in (
+    session.query(Address)
+    .join(Address.user)
+    .filter(User.name == "jack")
+    .options(joinedload(Address.user))
+):
     print(address, address.user)
 
 ### slide:: p
@@ -228,10 +236,12 @@ for address in session.query(Address).\
 
 from sqlalchemy.orm import contains_eager
 
-for address in session.query(Address).\
-                join(Address.user).\
-                filter(User.name == 'jack').\
-                options(contains_eager(Address.user)):
+for address in (
+    session.query(Address)
+    .join(Address.user)
+    .filter(User.name == "jack")
+    .options(contains_eager(Address.user))
+):
     print(address, address.user)
 
 
@@ -269,5 +279,3 @@ for address in session.query(Address).\
 from sqlalchemy import Integer, String, Numeric
 
 ### slide::
-
-

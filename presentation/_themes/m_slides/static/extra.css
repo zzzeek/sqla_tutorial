@@ -1,0 +1,105 @@
+.titleslide  img.titleimage {
+	position:absolute;
+	top:8em;
+}
+
+.titleslide > h1 {
+	position: absolute;
+	top:7em;
+}
+
+
+.center-text {
+  text-align:center;
+}
+
+.big-center {
+	display:block;
+	text-align:center;
+	vertical-align: middle;
+	height:18em;
+  margin-left: auto;
+  margin-right: auto;
+
+}
+
+.subheader {
+	font-size: .8em;
+}
+strong {
+	font-family: "Open Sans Semibold", Arial, Sans-serif;
+}
+
+
+article > h2 {
+}
+
+article > p {
+   padding-left:4em;
+   padding-right:4em;
+
+}
+div.ulwrap, div.highlight-python, div.highlight-sql {
+   display:table-cell;
+   /* we want a "fixed" height, as percentages seem to be ignored,
+      but we want it also to be font proportional for "t" mode and
+      such.  use em!  seems to work.  */
+   height: 14.5em;
+   vertical-align:middle;
+   padding-left:7em;
+   padding-right:7em;
+}
+
+.center-header h1 {
+	position:absolute;
+	top:0; bottom:0; left:0; right:0;
+	margin:auto;
+	height:240px;
+	width:70%;
+	font-size:3.2em;
+}
+.white h1 {
+	color: #FCFCFC;
+}
+
+.bottom {
+	position:absolute;
+	bottom:16px;
+	left: 25px;
+}
+
+
+@media print {
+
+    .slides > article.fill img,
+    .center-header h1 {
+        position: static;
+    }
+
+
+    .slides > article,
+    .slides > article.far-past,
+    .slides > article.past,
+    .slides > article.next,
+    .slides > article.far-next {
+
+        position: static;
+        overflow: hidden;
+        display: block !important;
+
+        margin: auto;
+        page-break-after: always;
+        page-break-inside: avoid;
+
+        transform: none;
+        -o-transform: none;
+        -moz-transform: none;
+        -webkit-transform: none;
+    }
+
+    .to-build {
+      opacity: 100;
+    }
+
+
+}

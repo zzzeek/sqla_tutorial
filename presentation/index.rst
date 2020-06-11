@@ -9,13 +9,15 @@
     :align: center
     :class: titleimage
 
-Mike Bayer
 
 .. rst-class:: bottom
+..
 
-Companion package::
+  Mike Bayer
 
-    git clone http://github.com/zzzeek/sqla_tutorial
+  Companion package::
+
+      git clone http://github.com/zzzeek/sqla_tutorial
 
 
 
@@ -145,15 +147,14 @@ The Python DBAPI
 DBAPI - Nutshell
 =================================
 
-.. sourcecode ::
+::
 
     import psycopg2
     connection = psycopg2.connect("scott", "tiger", "test")
 
     cursor = connection.cursor()
     cursor.execute(
-        "select emp_id, emp_name from employee "
-        "where emp_id=%(emp_id)s",
+        "select emp_id, emp_name from employee where emp_id=%(emp_id)s",
         {'emp_id':5}
     )
 
@@ -162,8 +163,7 @@ DBAPI - Nutshell
     cursor = connection.cursor()
 
     cursor.execute(
-        "insert into employee_of_month "
-        "(emp_name) values (%(emp_name)s)",
+        "insert into employee_of_month (emp_name) values (%(emp_name)s)",
         {"emp_name":emp_name}
     )
 
@@ -174,14 +174,32 @@ DBAPI - Nutshell
 Important DBAPI Facts
 =================================
 
-* DBAPI assumes that a transaction is always in progress. There is no begin()
-  method, only commit() and rollback().
-* DBAPI encourages bound parameters, via the execute() and executemany()
-  methods. But has six different formats.
-* All DBAPIs have inconsistencies regarding datatypes, primary key generation,
-  custom database features, result/cursor behavior
-* DBAPI has it's own exception hierarchy, which SQLAlchemy exposes directly in
-  a generic namespace.
+* DBAPI assumes by default that a transaction is always in progress. There is
+  no ``.begin()`` method, only ``.commit()`` and ``.rollback()``.
+* Most DBAPIs now have an ".autocommit" feature, disabled by default. When
+  enabled, there is **never** a transaction in progress; ``.commit()`` and
+  ``.rollback()`` are no-ops.
+* DBAPI encourages the use of bound parameters when statements are executed,
+  but it has **six** different formats.
+* All DBAPIs have **massive** inconsistencies in how they behave.  It is not
+  possible to write non-trivial DBAPI-agnostic code without the use of
+  libraries on top of it.
+
+Sample DBAPI Inconsistencies
+=============================
+
+* DBAPIs publish their own exception classes that must be caught explicitly;
+  messages are completely different.
+* SQLite does not fully accommodate datetime objects, they must be stored and
+  retreived as strings.
+* pyodbc with SQL Server will often fail to use a VARCHAR table index because
+  Python strings are Unicode and it passes them as NVARCHAR.
+* psycopg2's ``cursor.executemany()`` call is extremely slow; special
+  extensions must be employed for it to perform acceptably
+* cx_Oracle requires extensive use of ``cursor.setinputsizes()`` to support
+  passing simple datatypes such dates and binary objects.
+* MySQL drivers require a special flag so that ``cursor.rowcount`` works the
+  same as all other DBAPIs
 
 SQLAlchemy and the DBAPI
 =================================
@@ -202,14 +220,16 @@ Engine - Usage
 Engine Facts
 =================
 
-* Executing via the Engine directly is called connectionless execution - the
-  Engine connects and disconnects for us.
-* Using a Connection is called explicit execution. We control the span of a
-  connection in use.
-* Engine usually uses a connection pool, which means "disconnecting" often
-  means the connection is just returned to the pool.
-* The SQL we send to engine.execute() as a string is not modified, is consumed
-  by the DBAPI verbatim.
+* Engine has historically had a few ways of executing statements, however
+  going forward, the only way is to get a ``Connection`` first and then
+  call ``connection.execute()``
+* In 1.4, ``Connection`` also has a method ``connection.exec_driver_sql()``
+  which accepts a string and directly passes it to the underlying DBAPI
+  in use.
+* ``Connection.execute()`` historically has supported this directly, however
+  in 1.4 passing a string to ``Connection.execute()`` is deprecated; use
+  ``text()`` if the SQL string is to be interpreted, ``.exec_driver_sql()``
+  if not.
 
 
 Level 2, Table Metadata, Reflection, DDL

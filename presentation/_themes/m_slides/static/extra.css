@@ -1,11 +1,14 @@
-.titleslide  img.titleimage {
-	position:absolute;
-	top:8em;
+
+.titleslide  a.titleimage {
+  position: absolute;
+  top: 20%;
+  width: 100%;
 }
 
 .titleslide > h1 {
-	position: absolute;
-	top:7em;
+  position: absolute;
+  top: 40%;
+  width: 100%;
 }
 
 
@@ -38,6 +41,10 @@ article > p {
    padding-left:4em;
    padding-right:4em;
 
+}
+
+div.highlight {
+  background-color: white;
 }
 div.ulwrap, div.highlight-python, div.highlight-sql {
    display:table-cell;

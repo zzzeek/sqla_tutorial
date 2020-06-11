@@ -45,6 +45,7 @@ body {
   width: 100%;
   height: 100%;
   left: 0;
+  font-size: 2em;
 
   position: absolute;
 
@@ -53,6 +54,8 @@ body {
 
 .slides > article {
   display: block;
+
+
 
   position: absolute;
   overflow: hidden;
@@ -70,7 +73,7 @@ body {
 */
   /*padding: 40px 60px;*/
 
-  padding-top: 3em;
+  padding-top: 2em;
 
   box-sizing: border-box;
   -o-box-sizing: border-box;
@@ -343,10 +346,6 @@ body {
 
 
 /* Styles for slides */
-
-.slides {
-    font-size: 30px;
-}
 
 .slides > article {
   font-family: 'Open Sans', Arial, sans-serif;

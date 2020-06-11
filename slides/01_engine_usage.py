@@ -1,57 +1,93 @@
 ### slide:: s
-from sqlalchemy import create_engine
 import os
+from sqlalchemy import create_engine
+from sqlalchemy import text
 
 if os.path.exists("some.db"):
     os.remove("some.db")
 e = create_engine("sqlite:///some.db")
-e.execute("""
-    create table employee (
-        emp_id integer primary key,
-        emp_name varchar
+with e.begin() as conn:
+    conn.execute(
+        text(
+            """
+        create table employee (
+            emp_id integer primary key,
+            emp_name varchar
+        )
+    """
+        )
     )
-""")
 
-e.execute("""
-    create table employee_of_month (
-        emp_id integer primary key,
-        emp_name varchar
+    conn.execute(
+        text(
+            """
+        create table employee_of_month (
+            emp_id integer primary key,
+            emp_name varchar
+        )
+    """
+        )
     )
-""")
 
-e.execute("""insert into employee(emp_name) values ('ed')""")
-e.execute("""insert into employee(emp_name) values ('jack')""")
-e.execute("""insert into employee(emp_name) values ('fred')""")
+    conn.execute(
+        text("insert into employee(emp_name) values (:name)"),
+        [{"name": "squidward"}, {"name": "spongebob"}, {"name": "sandy"}],
+    )
+
 
 ### slide::
 ### title:: Engine Basics
 # create_engine() builds a *factory* for database connections.
+# Below we create an engine that will connect to a SQLite database.
 
 from sqlalchemy import create_engine
 
 engine = create_engine("sqlite:///some.db")
 
-### slide:: p
-# Engine features an *execute()* method that will run a query on
-# a connection for us.
+### slide::
+# The Engine doesn't actually connect until we tell it to for the first
+# time.  When using it directly, we get a connection using the .connect()
+# method.
 
-result = engine.execute(
-                 "select emp_id, emp_name from "
-                 "employee where emp_id=:emp_id",
-                 emp_id=3)
+connection = engine.connect()
+connection
 
 ### slide::
-# the result object we get back features methods like fetchone(),
-# fetchall()
+# The Connection is a so-called **proxy** for a DBAPI connection.  We can
+# see it by peeking at the .connection attribute, then .connection again
+
+connection.connection.connection
+
+### slide:: p
+
+# The Connection then features an .execute() method that will run queries.
+# To invoke a textual query we use the text() construct
+
+from sqlalchemy import text
+
+result = connection.execute(
+    text("select emp_id, emp_name from employee where emp_id=:emp_id"),
+    {"emp_id": 3}
+)
+
+### slide::
+# the result object we get back is similar to a cursor, and features methods
+# like fetchone(), fetchall()
 row = result.fetchone()
 
 ### slide:: i
-# the row looks like a tuple
+# the row looks and acts mostly like a tuple
 row
+row[1]
 
 ### slide:: i
-# but also acts like a dictionary
-row['emp_name']
+# but also acts like a dictionary (deprecated version)
+row["emp_name"]
+
+### slide:: i
+# in SQLAlchemy 1.4, the "dictionary" view is available via ._mapping
+row._mapping["emp_name"]
+
 
 ### slide::
 # results close automatically when all rows are exhausted, but we can
@@ -75,8 +111,10 @@ print(result.fetchall())
 # The execute() method of Engine will *autocommit*
 # statements like INSERT by default.
 
-engine.execute("insert into employee_of_month (emp_name) values (:emp_name)",
-                    emp_name='fred')
+engine.execute(
+    "insert into employee_of_month (emp_name) values (:emp_name)",
+    emp_name="fred",
+)
 
 ### slide:: p
 # We can control the scope of connection using connect().
@@ -92,8 +130,12 @@ conn.close()
 
 conn = engine.connect()
 trans = conn.begin()
-conn.execute("insert into employee (emp_name) values (:emp_name)", emp_name="wendy")
-conn.execute("update employee_of_month set emp_name = :emp_name", emp_name="wendy")
+conn.execute(
+    "insert into employee (emp_name) values (:emp_name)", emp_name="wendy"
+)
+conn.execute(
+    "update employee_of_month set emp_name = :emp_name", emp_name="wendy"
+)
 trans.commit()
 conn.close()
 
@@ -101,8 +143,12 @@ conn.close()
 # a context manager is supplied to streamline this process.
 
 with engine.begin() as conn:
-    conn.execute("insert into employee (emp_name) values (:emp_name)", emp_name="mary")
-    conn.execute("update employee_of_month set emp_name = :emp_name", emp_name="mary")
+    conn.execute(
+        "insert into employee (emp_name) values (:emp_name)", emp_name="mary"
+    )
+    conn.execute(
+        "update employee_of_month set emp_name = :emp_name", emp_name="mary"
+    )
 
 
 ### slide:: l

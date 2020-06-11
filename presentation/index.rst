@@ -126,6 +126,56 @@ Can be learned from the inside out, or outside
 in
 
 
+The Big News:  1.4, 2.0
+========================
+
+* With the standardization of Python 3, SQLAlchemy is on the path to
+  an **all new 2.0 release**.
+* 2.0 includes major new features, a significant streamling of APIs, and
+  removes lots of long-standing patterns that have legacy roots
+* Release 1.4 is a **transitional** release.   All of 2.0's features and
+  usage patterns will be present in 1.4
+* For full 2.0 patterns, a "future mode" is provided that changes Core APIs
+  to work in the new way fully.
+* It will include a deprecation mode that warns for all the patterns that
+  2.0 will remove.
+
+1.4 / 2.0 Major Changes - Core
+===============================
+
+.. rst-class:: subheader
+
+(for people who already know some SQLAlchemy)
+
+* The Engine will require that a Connection is used to execute a statement, no
+  more engine.execute() or statement.execute() (future mode)
+* Engine no longer implements library-level autocommit, a new .commit() method
+  is added  (future mode)
+* The result object features rows that now act fully like tuples, including
+  ``"value in row"``  (future mode)
+* The result object has major new capabilities - ``result.columns('x', 'y')``,
+  ``result.partitions(size)``, ``result.unique()``, ``result.scalars()``, etc
+* All SQL compilation is now cached
+
+
+1.4 / 2.0 Major Changes - ORM
+===============================
+
+.. rst-class:: subheader
+
+(for people who already know some SQLAlchemy)
+
+* The Core select() object becomes the primary ORM interface for emitting
+  SELECT statements (future mode).  Query() is a thin facade that is no longer
+  needed
+* Declarative becomes part of ``sqlalchemy.orm``
+* ORM results are now returned using the same Result / Row objects that one
+  gets from a Core statement execution  (future mode)
+* The SQL compilation layer applies to the ORM as well, moves most
+  query-construction complexity to occur within the SQL compilation phase that
+  is cached.
+
+
 Level 1, Engine, Connection, Transactions
 ==========================================
 
@@ -159,8 +209,6 @@ DBAPI - Nutshell
     )
 
     emp_name = cursor.fetchone()[1]
-    cursor.close()
-    cursor = connection.cursor()
 
     cursor.execute(
         "insert into employee_of_month (emp_name) values (%(emp_name)s)",
@@ -204,32 +252,39 @@ Sample DBAPI Inconsistencies
 SQLAlchemy and the DBAPI
 =================================
 
-* The first layer in SQLAlchemy is known as the Engine, which is the object
-  that maintains the classical DBAPI interaction.
+* SQLAlchemy's first goal is to "tame" the DBAPI.
+* Provides a consistent URL-based connectivity pattern
+* Provides a fully-encompassing, extensible type system
+* Abstracts away autoincrement / sequences / identity columns and post-fetching
+  for INSERT statements
+* Provides a single bound parameter format
+* Provides a fixed exception hierarchy (doesn't normalize messaging though)
 
 
-
-Engine - Usage
+The SQLAlchemy Engine
 =================================
+
+.. rst-class:: subheader
+
+The ``sqlalchemy.Engine`` object is the most fundamental gateway to
+database connectivity.
 
 ::
 
-    .venv/bin/sliderepl 01_engine.py
+  .venv/bin/sliderepl 01_engine.py
 
 
 Engine Facts
 =================
 
-* Engine has historically had a few ways of executing statements, however
-  going forward, the only way is to get a ``Connection`` first and then
-  call ``connection.execute()``
+* For 1.4 on forward, ``connection.execute()`` is the single way to execute
+  statements.
+* Previous methods like ``engine.execute()``, ``statement.execute()`` are
+  deprecated.
+* To execute a raw string SQL with ``Connection.execute()``, use ``text()``.
+  Passing a string directly is deprecated.
 * In 1.4, ``Connection`` also has a method ``connection.exec_driver_sql()``
-  which accepts a string and directly passes it to the underlying DBAPI
-  in use.
-* ``Connection.execute()`` historically has supported this directly, however
-  in 1.4 passing a string to ``Connection.execute()`` is deprecated; use
-  ``text()`` if the SQL string is to be interpreted, ``.exec_driver_sql()``
-  if not.
+  which accepts a string and directly passes it to the underlying DBAPI in use.
 
 
 Level 2, Table Metadata, Reflection, DDL
@@ -247,8 +302,11 @@ What is "Metadata"?
 * Describes the structure of the database, i.e. tables, columns, constraints,
   in terms of data structures in Python
 * Serves as the basis for SQL generation and object relational mapping
-* Can generate to a schema
-* Can be generated from a schema
+* Can generate to a schema, i.e. turned into DDL that is emitted to the
+  database
+* Can be generated from a schema, i.e. database introspection is performed
+  to generate Python structures that represent those tables
+* Forms the basis for database migration tools like SQLAlchemy Alembic.
 
 
 MetaData and Table

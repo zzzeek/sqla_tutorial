@@ -28,7 +28,9 @@
 
 .subheader {
 	font-size: .8em;
+  text-align: center;
 }
+
 strong {
 	font-family: "Open Sans Semibold", Arial, Sans-serif;
 }

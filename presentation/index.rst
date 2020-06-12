@@ -75,18 +75,14 @@ SQLAlchemy Overview
 
 SQLAlchemy consists of the Core and the ORM
 
-.. rst-class:: big-center
-
 .. image:: sqla_arch.png
     :align: center
-
-
 
 SQLAlchemy - Core
 =================================
 
-* Engine - a registry which provides connectivity to a particular database
-  server.
+* Engine - a factory for database connections which are maintained by
+  a connection pool
 * Dialect - interprets generic SQL and database commands in terms of a specific
   DBAPI and database backend.
 * Connection Pool - holds a collection of database connections in memory for
@@ -113,8 +109,6 @@ SQLAlchemy - ORM
 
 SQLAlchemy is like an Onion
 =================================
-
-.. rst-class:: big-center
 
 .. image:: onion.png
     :align: center
@@ -178,8 +172,6 @@ The Big News:  1.4, 2.0
 
 Level 1, Engine, Connection, Transactions
 ==========================================
-
-.. rst-class:: big-center
 
 .. image:: onion.png
     :align: center
@@ -290,8 +282,6 @@ Engine Facts
 Level 2, Table Metadata, Reflection, DDL
 =========================================
 
-.. rst-class:: big-center
-
 .. image:: onion.png
     :align: center
 
@@ -323,23 +313,25 @@ Some Basic Types
 * ``String()`` - strings, generates VARCHAR
 * ``Unicode()`` - Unicode strings - generates VARCHAR, NVARCHAR depending on
   database
-* ``Boolean()`` - generates BOOLEAN, INT, TINYINT
+* ``Boolean()`` - generates BOOLEAN, INT, TINYINT, BIT
 * ``DateTime()`` - generates DATETIME or TIMESTAMP, returns Python datetime()
   objects
 * ``Float()`` - floating point values
 * ``Numeric()`` - precision numerics using Python ``Decimal()``
+* ``JSON()`` - now supported by PostgreSQL, MySQL and SQLite
+* ``ARRAY()``- supported by PostgreSQL
 
 
 CREATE and DROP
 =================================
 
-* ``metadata.create_all(engine, checkfirst=<True|False>)`` emits CREATE
+* ``metadata.create_all(connection, checkfirst=<True|False>)`` emits CREATE
   statements for all tables.
-* ``table.create(engine, checkfirst=<True|False>)`` emits CREATE for a single
+* ``table.create(connection, checkfirst=<True|False>)`` emits CREATE for a single
   table.
-* ``metadata.drop_all(engine, checkfirst=<True|False>)`` emits DROP statements
+* ``metadata.drop_all(connection, checkfirst=<True|False>)`` emits DROP statements
   for all tables.
-* ``table.drop(engine, checkfirst=<True| False>)`` emits DROP for a single
+* ``table.drop(connection, checkfirst=<True| False>)`` emits DROP for a single
   table.
 
 
@@ -373,8 +365,6 @@ SQL Expressions
 Level 4, Object Relational Mapping
 ==================================
 
-.. rst-class:: big-center
-
 .. image:: onion.png
     :align: center
 
@@ -392,27 +382,36 @@ Object Relational Mapping
 What does an ORM Do?
 =================================
 
+.. rst-class:: subheader
+
 The most basic task is to translate between a domain object and a table row.
 
-    picture
+.. image:: tablemap.png
+    :align: center
 
 
 What does an ORM Do?
 =================================
+
+.. rst-class:: subheader
 
 Some ORMs can also represent arbitrary rows as domain objects within the
 application, that is, rows derived from SELECT statements or views.
 
-    picutre
+.. image:: selectorm.png
+    :align: center
 
 
 What does an ORM Do?
 =================================
 
+.. rst-class:: subheader
+
 Most ORMs also represent basic compositions, primarily one-to-many and
 many-to-one, using foreign key associations.
 
-    picture
+.. image:: relationshiporm.png
+    :align: center
 
 
 What does an ORM Do?
@@ -493,10 +492,12 @@ separate.
     # elsewhere, it's associated with a database table
     mapper(
         User,
-        Table("user", metadata,
-        Column("id", Integer, primary_key=True),
-        Column("name", String(50)),
-        Column("fullname", String(100))
+        Table(
+          "user",
+          metadata,
+          Column("id", Integer, primary_key=True),
+          Column("name", String(50)),
+          Column("fullname", String(100))
         )
     )
 
@@ -508,8 +509,8 @@ SQLAlchemy ORM
 * The SQLAlchemy ORM is essentially a data mapper style ORM.
 * Modern versions use declarative configuration; the "domain and schema
   separate" configuration model is present underneath this layer.
-* The ORM builds upon SQLAlchemy Core, and many of the SQL Expression concepts
-  are present when working with the ORM as well.
+* The ORM builds upon SQLAlchemy Core.  All of the SQL Expression language
+  concepts are present when working with the ORM as well.
 * In contrast to the SQL Expression language, which presents a schema-centric
   view of data, it presents a domain-model centric view of data.
 
@@ -524,8 +525,9 @@ Key ORM Patterns
   work, and are kept unique on that primary key identity.
 * Lazy Loading - Some attributes of an object may emit additional SQL queries
   when they are accessed.
-* Eager Loading - Multiple tables are queried at once in order to load related
-  objects and collections.
+* Eager Loading - attributes are loaded immediately.  Related tables may be
+  loaded using JOINs to the primary SELECT statement or additional queries
+  can be emitted.
 * Method Chaining - queries are composed using a string of method calls which
   each return a new query object.
 

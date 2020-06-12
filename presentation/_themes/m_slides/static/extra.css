@@ -20,7 +20,7 @@
 	display:block;
 	text-align:center;
 	vertical-align: middle;
-	height:18em;
+	min-height:18em;
   margin-left: auto;
   margin-right: auto;
 
@@ -55,8 +55,8 @@ div.ulwrap, div.highlight-python, div.highlight-sql {
       such.  use em!  seems to work.  */
    height: 14.5em;
    vertical-align:middle;
-   padding-left:7em;
-   padding-right:7em;
+   padding-left:5em;
+   padding-right:5em;
 }
 
 .center-header h1 {

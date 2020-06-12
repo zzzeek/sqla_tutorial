@@ -31,7 +31,7 @@ with e.begin() as conn:
 
     conn.execute(
         text("insert into employee(emp_name) values (:name)"),
-        [{"name": "squidward"}, {"name": "spongebob"}, {"name": "sandy"}],
+        [{"name": "spongebob"}, {"name": "sandy"}, {"name": "squidward"}],
     )
 
 
@@ -43,6 +43,16 @@ with e.begin() as conn:
 from sqlalchemy import create_engine
 
 engine = create_engine("sqlite:///some.db")
+
+
+### slide::
+# So that we can show off some 2.0 features, we will make a second
+# engine against the same database
+
+from sqlalchemy.future import create_engine as f_create_engine
+
+future_engine = f_create_engine("sqlite:///some.db")
+
 
 ### slide::
 # The Engine doesn't actually connect until we tell it to for the first
@@ -67,7 +77,7 @@ from sqlalchemy import text
 
 result = connection.execute(
     text("select emp_id, emp_name from employee where emp_id=:emp_id"),
-    {"emp_id": 3}
+    {"emp_id": 2}
 )
 
 ### slide::
@@ -80,7 +90,7 @@ row = result.fetchone()
 row
 row[1]
 
-### slide:: i
+### slide::
 # but also acts like a dictionary (deprecated version)
 row["emp_name"]
 
@@ -97,75 +107,126 @@ result.close()
 ### slide:: p
 # result objects can also be iterated
 
-result = engine.execute("select * from employee")
+result = connection.execute(text("select * from employee"))
 for row in result:
     print(row)
 
 ### slide:: p
-# the fetchall() method is a shortcut to producing a list
-# of all rows.
-result = engine.execute("select * from employee")
-print(result.fetchall())
-
-### slide:: p
-# The execute() method of Engine will *autocommit*
-# statements like INSERT by default.
-
-engine.execute(
-    "insert into employee_of_month (emp_name) values (:emp_name)",
-    emp_name="fred",
-)
-
-### slide:: p
-# We can control the scope of connection using connect().
-
-conn = engine.connect()
-result = conn.execute("select * from employee")
+# and there are methods like fetchall()
+result = connection.execute(text("select * from employee"))
 result.fetchall()
-conn.close()
 
 ### slide:: p
-# to run several statements inside a transaction, Connection
-# features a begin() method that returns a Transaction.
-
-conn = engine.connect()
-trans = conn.begin()
-conn.execute(
-    "insert into employee (emp_name) values (:emp_name)", emp_name="wendy"
-)
-conn.execute(
-    "update employee_of_month set emp_name = :emp_name", emp_name="wendy"
-)
-trans.commit()
-conn.close()
+# in 1.4 there are fancier methods too
+result = connection.execute(text("select * from employee"))
+result.scalars('emp_name').all()
 
 ### slide:: p
-# a context manager is supplied to streamline this process.
+# In 1.x SQLAlchemy versions, statements like INSERT statements, even
+# when they are passed as plain strings, are subject to autocommit
+# behavior.
 
-with engine.begin() as conn:
-    conn.execute(
-        "insert into employee (emp_name) values (:emp_name)", emp_name="mary"
+connection.execute(
+    text("insert into employee_of_month (emp_name) values (:emp_name)"),
+    {"emp_name": "spongebob"}
+)
+
+
+### slide:: p
+# In 2.0, this autocommit is removed.   There is instead a local
+# .commit() method for commit-as-you-go style use.
+
+with future_engine.connect() as future_connection:
+    future_connection.execute(
+        text("insert into employee_of_month (emp_name) values (:emp_name)"),
+        {"emp_name": "sandy"}
     )
-    conn.execute(
-        "update employee_of_month set emp_name = :emp_name", emp_name="mary"
+    future_connection.commit()
+
+
+### slide::
+# Connection has a .close() method.  This **releases** the
+# DBAPI connection back to the connection pool.  This may or
+# may not actually close the DBAPI connection.
+connection.close()
+
+### slide::
+# however it is preferred to use context managers to manage the connect/
+# release process
+
+with engine.connect() as connection:
+    connection.execute(text("select * from employee")).all()
+
+    # releases connection back to the pool
+
+### slide:: p
+# To explicitly demarcate begin/commit, the most idiomatic way is to use the
+# .begin() method of Engine which returns a context manager that yields
+# the connection
+
+with engine.begin() as connection:
+    connection.execute(
+        text("insert into employee_of_month (emp_name) values (:emp_name)"),
+        {"emp_name": "squidward"}
     )
+    # commits transaction, releases connection back to the connection pool.
+    # rolls back if there is an exception before re-throwing
 
 
-### slide:: l
-### title:: Exercises
-# Assuming this table:
-#
-#     CREATE TABLE employee (
-#         emp_id INTEGER PRIMARY KEY,
-#         emp_name VARCHAR(30)
-#     }
-#
-# And using the "engine.execute()" method to invoke a statement:
-#
-# 1. Execute an INSERT statement that will insert the row with emp_name='dilbert'.
-#    The primary key column can be omitted so that it is generated automatically.
-#
-# 2. SELECT all rows from the employee table.
-#
+### slide:: p
+# You can also explicitly begin() from the Connection, returning a
+# Transaction object which supports rollback and commit
+
+with engine.connect() as connection:
+    trans = connection.begin()
+    connection.execute(
+        text("insert into employee (emp_name) values (:emp_name)"),
+        {"emp_name": "patrick"}
+    )
+    trans.commit()
+    trans = connection.begin()
+    connection.execute(
+        text("update employee_of_month set emp_name = :emp_name"),
+        {"emp_name": "patrick"}
+    )
+    trans.rollback()  # sorry patrick
+
+### slide:: p
+# The Transaction also supports context manager use which is
+# much easier to use.  rollback is called automatically if an exception
+# is raised
+
+with engine.connect() as connection:
+    with connection.begin() as trans:
+        connection.execute(
+            text("update employee_of_month set emp_name = :emp_name"),
+            {"emp_name": "squidward"}
+        )
+        # commits transaction, or rollback if exception
+    # closes connection
+
+
+### slide:: p
+# transactions support "nesting", which is implemented using the
+# SAVEPOINT construct.
+
+with engine.connect() as connection:
+    with connection.begin() as trans:
+        savepoint = connection.begin_nested()
+        connection.execute(
+            text("update employee_of_month set emp_name = :emp_name"),
+            {"emp_name": "patrick"}
+        )
+        savepoint.rollback()  # sorry patrick
+
+        with connection.begin_nested() as savepoint:
+            connection.execute(
+                text("update employee_of_month set emp_name = :emp_name"),
+                {"emp_name": "spongebob"}
+            )
+            # releases savepoint
+
+        # commits transaction, or rollback if exception
+    # closes connection
 
 ### slide::

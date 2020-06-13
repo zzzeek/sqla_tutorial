@@ -3,6 +3,10 @@
 # We start with two tables this time.
 from sqlalchemy import MetaData, Table, Column, String, Integer, select
 
+# TODO: show select + future_select
+# discuss select([]) vs future_select()
+# discuss select().select_from(join) vs. future_select().join()
+
 metadata = MetaData()
 user_table = Table('user', metadata,
                     Column('id', Integer, primary_key=True),

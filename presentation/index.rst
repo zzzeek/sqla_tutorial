@@ -335,14 +335,14 @@ CREATE and DROP
   table.
 
 
-Level 3, SQL Expressions
-=================================
+Level 3, Core SQL Expression Language
+=====================================
 
 .. image:: onion.png
     :align: center
 
 
-SQL Expressions
+Core SQL Expression Language
 =================================
 
 * The SQL Expression system builds upon Table Metadata in order to compose SQL
@@ -353,13 +353,18 @@ SQL Expressions
   SQL, like a comparison, a SELECT statement, a conjunction such as AND or OR.
 * We work with these objects in Python, which are then converted to strings
   when we "execute" them (as well as if we print them).
+* SQL expressions in both Core and ORM variants rely heavily on the "method
+  chaining" programming pattern
+
 
 SQL Expressions
 =================================
 
 ::
 
-    .venv/bin/sliderepl 03_sql_expressions.py
+    .venv/bin/sliderepl 03_sql_basic.py
+
+    .venv/bin/sliderepl 03_sql_adv.py
 
 
 Level 4, Object Relational Mapping
@@ -528,8 +533,6 @@ Key ORM Patterns
 * Eager Loading - attributes are loaded immediately.  Related tables may be
   loaded using JOINs to the primary SELECT statement or additional queries
   can be emitted.
-* Method Chaining - queries are composed using a string of method calls which
-  each return a new query object.
 
 ORM Walkthrough
 =================================

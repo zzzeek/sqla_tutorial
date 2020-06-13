@@ -56,10 +56,10 @@ session = Session(bind=engine)
 
 session.add_all(
     [
-        User(name="ed", fullname="Ed Jones"),
-        User(name="wendy", fullname="Wendy Weathersmith"),
-        User(name="mary", fullname="Mary Contrary"),
-        User(name="fred", fullname="Fred Flinstone"),
+        User(name="spongebob", fullname="Spongebob Squarepants"),
+        User(name="sandy", fullname="Sandy Cheeks"),
+        User(name="patrick", fullname="Patrick Star"),
+        User(name="squidward", fullname="Squidward Tentacles"),
     ]
 )
 session.commit()

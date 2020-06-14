@@ -4,6 +4,7 @@
 # object relational mappings.
 
 from sqlalchemy.ext.declarative import declarative_base
+
 Base = declarative_base()
 
 ### slide::
@@ -11,17 +12,17 @@ Base = declarative_base()
 
 from sqlalchemy import Column, Integer, String
 
+
 class User(Base):
-    __tablename__ = 'user'
+    __tablename__ = "user"
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
     fullname = Column(String)
 
     def __repr__(self):
-        return "<User(%r, %r)>" % (
-                self.name, self.fullname
-            )
+        return "<User(%r, %r)>" % (self.name, self.fullname)
+
 
 ### slide::
 # the User class now has a Table object associated with it.
@@ -30,7 +31,8 @@ User.__table__
 
 ### slide::
 # The Mapper object mediates the relationship between User
-# and the "user" Table object.
+# and the "user" Table object.  This mapper object is generally behind
+# the scenes.
 
 User.__mapper__
 
@@ -38,63 +40,67 @@ User.__mapper__
 # User has a default constructor, accepting field names
 # as arguments.
 
-ed_user = User(name='ed', fullname='Edward Jones')
+spongebob = User(name="spongebob", fullname="Spongebob Squarepants")
 
 ### slide::
 # The "id" field is the primary key, which starts as None
 # if we didn't set it explicitly.
 
-print(ed_user.name, ed_user.fullname)
-print(ed_user.id)
+print(spongebob.name, spongebob.fullname)
+print(spongebob.id)
 
 ### slide:: p
 # The MetaData object is here too, available from the Base.
 
 from sqlalchemy import create_engine
-engine = create_engine('sqlite://')
-Base.metadata.create_all(engine)
+
+engine = create_engine("sqlite://")
+with engine.begin() as connection:
+    Base.metadata.create_all(connection)
 
 ### slide::
 # To persist and load User objects from the database, we
 # use a Session object.
 
 from sqlalchemy.orm import Session
+
 session = Session(bind=engine)
 
 ### slide::
 # new objects are placed into the Session using add().
-session.add(ed_user)
+session.add(spongebob)
 
 ### slide:: pi
 # the Session will *flush* *pending* objects
 # to the database before each Query.
 
-our_user = session.query(User).filter_by(name='ed').first()
-our_user
+also_spongebob = session.query(User).filter_by(name="spongebob").first()
+also_spongebob
 
 ### slide::
 # the User object we've inserted now has a value for ".id"
-print(ed_user.id)
+print(spongebob.id)
 
 ### slide::
 # the Session maintains a *unique* object per identity.
-# so "ed_user" and "our_user" are the *same* object
+# so "spongebob" and "our_user" are the *same* object
 
-ed_user is our_user
+spongebob is also_spongebob
 
 ### slide::
 # Add more objects to be pending for flush.
 
-session.add_all([
-    User(name='wendy', fullname='Wendy Weathersmith'),
-    User(name='mary', fullname='Mary Contrary'),
-    User(name='fred', fullname='Fred Flinstone')
-])
+session.add_all(
+    [
+        User(name="patrick", fullname="Patrick Star"),
+        User(name="sandy", fullname="Sandy Cheeks"),
+    ]
+)
 
 ### slide::
-# modify "ed_user" - the object is now marked as *dirty*.
+# modify "spongebob" - the object is now marked as *dirty*.
 
-ed_user.fullname = 'Ed Jones'
+spongebob.fullname = "Spongebob Jones"
 
 ### slide::
 # the Session can tell us which objects are dirty...
@@ -117,28 +123,28 @@ session.commit()
 # *invalidates* all data, so that accessing them will automatically
 # start a *new* transaction and re-load from the database.
 
-ed_user.fullname
+spongebob.fullname
 
 ### slide::
 # Make another "dirty" change, and another "pending" change,
 # that we might change our minds about.
 
-ed_user.name = 'Edwardo'
-fake_user = User(name='fakeuser', fullname='Invalid')
+spongebob.name = "Spongy"
+fake_user = User(name="fakeuser", fullname="Invalid")
 session.add(fake_user)
 
 ### slide:: p
 # run a query, our changes are flushed; results come back.
 
-session.query(User).filter(User.name.in_(['Edwardo', 'fakeuser'])).all()
+session.query(User).filter(User.name.in_(["Spongy", "fakeuser"])).all()
 
 ### slide::
 # But we're inside of a transaction.  Roll it back.
 session.rollback()
 
 ### slide:: p
-# ed_user's name is back to normal
-ed_user.name
+# spongebob's name is back to normal
+spongebob.name
 
 ### slide::
 # "fake_user" has been evicted from the session.
@@ -147,7 +153,7 @@ fake_user in session
 ### slide:: p
 # and the data is gone from the database too.
 
-session.query(User).filter(User.name.in_(['ed', 'fakeuser'])).all()
+session.query(User).filter(User.name.in_(["spongebob", "fakeuser"])).all()
 
 
 ### slide::
@@ -155,7 +161,7 @@ session.query(User).filter(User.name.in_(['ed', 'fakeuser'])).all()
 # The attributes on our mapped class act like Column objects, and
 # produce SQL expressions.
 
-print(User.name == "ed")
+print(User.name == "spongebob")
 
 
 ### slide:: p
@@ -163,7 +169,7 @@ print(User.name == "ed")
 # object provides a lot more functionality,
 # here selecting the User *entity*.
 
-query = session.query(User).filter(User.name == 'ed').order_by(User.id)
+query = session.query(User).filter(User.name == "spongebob").order_by(User.id)
 
 query.all()
 
@@ -195,15 +201,13 @@ for u in session.query(User).order_by(User.id)[1:3]:
 ### slide:: p
 # the WHERE clause is either by filter_by(), which is convenient
 
-for name, in session.query(User.name).\
-                filter_by(fullname='Ed Jones'):
+for (name,) in session.query(User.name).filter_by(fullname="spongebob Jones"):
     print(name)
 
 ### slide:: p
 # or filter(), which is more flexible
 
-for name, in session.query(User.name).\
-                filter(User.fullname == 'Ed Jones'):
+for (name,) in session.query(User.name).filter(User.fullname == "spongebob Jones"):
     print(name)
 
 ### slide:: p
@@ -211,22 +215,25 @@ for name, in session.query(User.name).\
 
 from sqlalchemy import or_
 
-for name, in session.query(User.name).\
-                filter(or_(User.fullname == 'Ed Jones', User.id < 5)):
+for (name,) in session.query(User.name).filter(
+    or_(User.fullname == "spongebob Jones", User.id < 5)
+):
     print(name)
 
 ### slide::
 # multiple filter() calls join by AND just like select().where()
 
-for user in session.query(User).\
-                        filter(User.name == 'ed').\
-                        filter(User.fullname == 'Ed Jones'):
+for user in (
+    session.query(User)
+    .filter(User.name == "spongebob")
+    .filter(User.fullname == "spongebob Jones")
+):
     print(user)
 
 ### slide::
 # Query has some variety for returning results
 
-query = session.query(User).filter_by(fullname='Ed Jones')
+query = session.query(User).filter_by(fullname="spongebob Jones")
 
 ### slide:: p
 # all() returns a list
@@ -246,7 +253,7 @@ query.one()
 ### slide:: p
 # if there's not one(), you get an error
 
-query = session.query(User).filter_by(fullname='nonexistent')
+query = session.query(User).filter_by(fullname="nonexistent")
 query.one()
 
 ### slide:: p
@@ -260,5 +267,3 @@ query.one()
 
 
 ### slide::
-
-

@@ -59,7 +59,7 @@ session.add_all(
         User(name="spongebob", fullname="Spongebob Squarepants"),
         User(name="sandy", fullname="Sandy Cheeks"),
         User(name="patrick", fullname="Patrick Star"),
-        User(name="squidward", fullname="Squidward Tentacles"),
+
     ]
 )
 session.commit()
@@ -67,28 +67,28 @@ session.commit()
 ### slide::
 # a new User object also gains an empty "addresses" collection now.
 
-jack = User(name="jack", fullname="Jack Bean")
-jack.addresses
+squidward = User(name="squidward", fullname="Squidward Tentacles")
+squidward.addresses
 
 ### slide::
 # populate this collection with new Address objects.
 
-jack.addresses = [
-    Address(email_address="jack@gmail.com"),
-    Address(email_address="j25@yahoo.com"),
-    Address(email_address="jack@hotmail.com"),
+squidward.addresses = [
+    Address(email_address="squidward@gmail.com"),
+    Address(email_address="s25@yahoo.com"),
+    Address(email_address="squidward@hotmail.com"),
 ]
 
 ### slide::
 # the "backref" sets up Address.user for each User.address.
 
-jack.addresses[1]
-jack.addresses[1].user
+squidward.addresses[1]
+squidward.addresses[1].user
 
 ### slide::
-# adding User->jack will *cascade* each Address into the Session as well.
+# adding User->squidward will *cascade* each Address into the Session as well.
 
-session.add(jack)
+session.add(squidward)
 session.new
 
 ### slide:: p
@@ -96,22 +96,22 @@ session.new
 session.commit()
 
 ### slide:: p
-# After expiration, jack.addresses emits a *lazy load* when first
+# After expiration, squidward.addresses emits a *lazy load* when first
 # accessed.
-jack.addresses
+squidward.addresses
 
 ### slide:: i
 # the collection stays in memory until the transaction ends.
-jack.addresses
+squidward.addresses
 
 ### slide:: p
 # collections and references are updated by manipulating objects,
 # not primary / foreign key values.
 
-fred = session.query(User).filter_by(name="fred").one()
-jack.addresses[1].user = fred
+spongebob = session.query(User).filter_by(name="spongebob").one()
+squidward.addresses[1].user = spongebob
 
-fred.addresses
+spongebob.addresses
 
 session.commit()
 
@@ -142,7 +142,7 @@ session.query(User, Address).join(Address).all()
 # Either User or Address may be referred to anywhere in the query.
 
 session.query(User.name).join(User.addresses).filter(
-    Address.email_address == "jack@gmail.com"
+    Address.email_address == "squidward@gmail.com"
 ).first()
 
 ### slide:: p
@@ -158,8 +158,8 @@ from sqlalchemy.orm import aliased
 
 a1, a2 = aliased(Address), aliased(Address)
 session.query(User).join(a1).join(a2).filter(
-    a1.email_address == "jack@gmail.com"
-).filter(a2.email_address == "jack@hotmail.com").all()
+    a1.email_address == "squidward@gmail.com"
+).filter(a2.email_address == "squidward@hotmail.com").all()
 
 ### slide:: p
 # We can also join with subqueries.  subquery() returns
@@ -225,7 +225,7 @@ for user in session.query(User).options(joinedload(User.addresses)):
 for address in (
     session.query(Address)
     .join(Address.user)
-    .filter(User.name == "jack")
+    .filter(User.name == "squidward")
     .options(joinedload(Address.user))
 ):
     print(address, address.user)
@@ -239,7 +239,7 @@ from sqlalchemy.orm import contains_eager
 for address in (
     session.query(Address)
     .join(Address.user)
-    .filter(User.name == "jack")
+    .filter(User.name == "squidward")
     .options(contains_eager(Address.user))
 ):
     print(address, address.user)

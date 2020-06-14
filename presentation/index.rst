@@ -107,6 +107,27 @@ SQLAlchemy - ORM
 * Presents a slightly more object centric perspective, as opposed to a schema
   centric perspective.
 
+SQLAlchemy - Other Subsystems
+=============================
+
+.. rst-class:: subheader
+
+Some of which didn't exist when this tutorial was first written !
+
+* ``sqlalchemy.events`` - a sophisticated event registration system which
+  provides user-definable hooks throughout all SQLAlchemy components.
+* ``sqlalchemy.inspect`` - a generalized system that provides a "deeper look"
+  at SQLAlchemy constructs, including a schema inspection system for engines
+  and an object inspector for ORM-persisted objects
+* ``sqlalchemy.ext`` - a series of extensions most (but not all) tailored towards
+  extending ORM functionality.
+* ``sqlalchemy.testing`` - an exported test suite that is used for third party
+  dialect authors to test their dialects for full feature compliance
+* ``sqlalchemy.examples`` - includes an in-depth performance testing suite
+  as well as the home for Space Invaders and over a dozen other recipes and
+  ideas.    Many more are on the Github wiki.
+
+
 SQLAlchemy is like an Onion
 =================================
 
@@ -141,15 +162,16 @@ The Big News:  1.4, 2.0
 
 (for people who already know some SQLAlchemy)
 
-* The Engine will require that a Connection is used to execute a statement, no
-  more engine.execute() or statement.execute() (future mode)
+* "Connectionless" execution goes away, no more engine.execute() or
+  statement.execute() (future mode).  Connection is always used with Core.
+* "bound metadata" goes away.
 * Engine no longer implements library-level autocommit, a new .commit() method
   is added  (future mode)
 * The result object features rows that now act fully like tuples, including
   ``"value in row"``  (future mode)
 * The result object has major new capabilities - ``result.columns('x', 'y')``,
   ``result.partitions(size)``, ``result.unique()``, ``result.scalars()``, etc
-* All SQL compilation is now cached
+* The vast majority of SQL compilation is now cached
 
 
 1.4 / 2.0 Major Changes - ORM
@@ -232,8 +254,8 @@ Sample DBAPI Inconsistencies
   messages are completely different.
 * SQLite does not fully accommodate datetime objects, they must be stored and
   retreived as strings.
-* pyodbc with SQL Server will often fail to use a VARCHAR table index because
-  Python strings are Unicode and it passes them as NVARCHAR.
+* pyodbc with SQL Server will sometimes fail to use a VARCHAR table index
+  because Python strings are Unicode and it passes them as NVARCHAR.
 * psycopg2's ``cursor.executemany()`` call is extremely slow; special
   extensions must be employed for it to perform acceptably
 * cx_Oracle requires extensive use of ``cursor.setinputsizes()`` to support
@@ -333,6 +355,8 @@ CREATE and DROP
   for all tables.
 * ``table.drop(connection, checkfirst=<True| False>)`` emits DROP for a single
   table.
+* It's a bit up in the air if these methods will continue to accept an
+  ``Engine`` object directly or if a ``Connection`` is required.
 
 
 Level 3, Core SQL Expression Language

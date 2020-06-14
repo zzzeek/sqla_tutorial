@@ -149,23 +149,6 @@ fake_user in session
 
 session.query(User).filter(User.name.in_(['ed', 'fakeuser'])).all()
 
-### slide::
-### title:: Exercises - Basic Mapping
-#
-# 1. Create a class/mapping for this table, call the class Network
-#
-# CREATE TABLE network (
-#      network_id INTEGER PRIMARY KEY,
-#      name VARCHAR(100) NOT NULL,
-# )
-#
-# 2. emit Base.metadata.create_all(engine) to create the table
-#
-# 3. commit a few Network objects to the database:
-#
-# Network(name='net1'), Network(name='net2')
-#
-#
 
 ### slide::
 ### title:: ORM Querying
@@ -273,16 +256,7 @@ query = session.query(User)
 query.one()
 
 ### slide::
-### title:: Exercises - ORM Querying
-# 1. Produce a Query object representing the list of "fullname" values for
-#    all User objects in alphabetical order.
-#
-# 2. call .all() on the query to make sure it works!
-#
-# 3. build a second Query object from the first that also selects
-#    only User rows with the name "mary" or "ed".
-#
-# 4. return only the second row of the Query from #3.
+### title:: Questions?
 
 
 ### slide::

@@ -49,9 +49,9 @@ engine = create_engine("sqlite:///some.db")
 # So that we can show off some 2.0 features, we will make a second
 # engine against the same database
 
-from sqlalchemy.future import create_engine as f_create_engine
+from sqlalchemy.future import create_engine as future_create_engine
 
-future_engine = f_create_engine("sqlite:///some.db")
+future_engine = future_create_engine("sqlite:///some.db")
 
 
 ### slide::
@@ -75,10 +75,8 @@ connection.connection.connection
 
 from sqlalchemy import text
 
-result = connection.execute(
-    text("select emp_id, emp_name from employee where emp_id=:emp_id"),
-    {"emp_id": 2}
-)
+stmt = text("select emp_id, emp_name from employee where emp_id=:emp_id")
+result = connection.execute(stmt, {"emp_id": 2})
 
 ### slide::
 # the result object we get back is similar to a cursor, and features methods
@@ -86,17 +84,40 @@ result = connection.execute(
 row = result.fetchone()
 
 ### slide:: i
-# the row looks and acts mostly like a tuple
+# the row looks and acts mostly like a named tuple
 row
 row[1]
+row.emp_name
 
 ### slide::
-# but also acts like a dictionary (deprecated version)
+# it also has a dictionary interface, however this is moving...
 row["emp_name"]
 
 ### slide:: i
 # in SQLAlchemy 1.4, the "dictionary" view is available via ._mapping
 row._mapping["emp_name"]
+
+### slide:: i
+# folks usually use the named tuple interface in any case
+row.emp_name
+
+### slide::
+### title:: our first 1.3 -> 1.4 "future" migration note
+# the dictionary thing is special because it implies the behavior of
+# "contains", e.g. "elem in collection".    In 1.3, "row" acts like a dictionary
+
+row
+row.keys()
+"emp_name" in row
+"sandy" in row
+
+### slide:: i
+# in 1.4 future / 2.0 it acts like a tuple
+with future_engine.connect() as future_conn:
+    row = future_conn.execute(stmt, {"emp_id": 2}).first()
+
+"emp_name" in row
+"sandy" in row
 
 
 ### slide::
@@ -228,5 +249,8 @@ with engine.connect() as connection:
 
         # commits transaction, or rollback if exception
     # closes connection
+
+### slide::
+### title:: Questions?
 
 ### slide::

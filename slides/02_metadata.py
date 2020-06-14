@@ -184,5 +184,7 @@ story, published = metadata2.tables['story'], metadata2.tables['published']
 
 print(select([story]).select_from(story.join(published)))
 
+### slide::
+### title:: Questions?
 
 ### slide::

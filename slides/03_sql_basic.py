@@ -146,8 +146,8 @@ with engine.begin() as connection:
     connection.execute(insert_stmt)
 
 ### slide:: p
-# insert() and update() normally generate their VALUES clauses from the
-# list of parameters that are passed to execute().
+# insert() and update() against plain Python values normally generate their
+# VALUES/SET clauses from the list of parameters that are passed to execute().
 
 with engine.begin() as connection:
     connection.execute(
@@ -184,14 +184,14 @@ select_stmt = select([user_table])
 connection.execute(select_stmt).fetchall()
 
 ### slide:: lp
-# specify a WHERE clause
+# specify WHERE and ORDER BY
 
 select_stmt = select([user_table]).where(
     or_(
         user_table.c.username == "spongebob",
         user_table.c.username == "sandy",
     )
-)
+).order_by(user_table.c.username)
 connection.execute(select_stmt).fetchall()
 
 ### slide:: lp
@@ -201,23 +201,24 @@ select_stmt = (
     select([user_table])
     .where(user_table.c.username == "spongebob")
     .where(user_table.c.fullname == "Spongebob Squarepants")
+    .order_by(user_table.c.username)
 )
 connection.execute(select_stmt).fetchall()
 
 
 ### slide:: p
-# to round out INSERT and SELECT, this is an UPDATE
+# an UPDATE, invoked with implicit "SET" clause
 
 update_stmt = (
     user_table.update()
-    .values(fullname="Patrick Star")
     .where(user_table.c.username == "patrick")
 )
 
-result = connection.execute(update_stmt)
+result = connection.execute(update_stmt, {"fullname": "Patrick Star"})
 
 ### slide:: p
-# an UPDATE can also use expressions based on other columns
+# update() uses the .values() method to explicitly indicate the SET clause.
+# It supports SQL expressions as well
 
 update_stmt = user_table.update().values(
     fullname=user_table.c.username + " " + user_table.c.fullname
@@ -232,5 +233,8 @@ delete_stmt = user_table.delete().where(user_table.c.username == "patrick")
 
 result = connection.execute(delete_stmt)
 
+
+### slide::
+### title:: Questions?
 
 ### slide::

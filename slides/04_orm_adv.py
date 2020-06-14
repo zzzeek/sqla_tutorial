@@ -246,36 +246,6 @@ for address in (
 
 
 ### slide::
-### title:: Exercises - Final Exam !
-# 1. Create a class called 'Account', with table "account":
-#
-#      id = Column(Integer, primary_key=True)
-#      owner = Column(String(50), nullable=False)
-#      balance = Column(Numeric, default=0)
-#
-# 2. Create a class "Transaction", with table "transaction":
-#      * Integer primary key
-#      * numeric "amount" column
-#      * Integer "account_id" column with ForeignKey('account.id')
-#
-# 3. Add a relationship() on Transaction named "account", which refers
-#    to "Account", and has a backref called "transactions".
-#
-# 4. Create a database, create tables, then insert these objects:
-#
-#      a1 = Account(owner='Jack Jones', balance=5000)
-#      a2 = Account(owner='Ed Rendell', balance=10000)
-#      Transaction(amount=500, account=a1)
-#      Transaction(amount=4500, account=a1)
-#      Transaction(amount=6000, account=a2)
-#      Transaction(amount=4000, account=a2)
-#
-# 5. Produce a report that shows:
-#     * account owner
-#     * account balance
-#     * summation of transaction amounts per account (should match balance)
-#       A column can be summed using func.sum(Transaction.amount)
-#
-from sqlalchemy import Integer, String, Numeric
+### title:: Questions?
 
 ### slide::

@@ -22,7 +22,7 @@ address_table = Table(
     "address",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("user_id", Integer, ForeignKey("user.id"), nullable=False),
+    Column("user_id", ForeignKey("user.id"), nullable=False),
     Column("email_address", String(100), nullable=False),
 )
 

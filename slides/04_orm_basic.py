@@ -17,11 +17,11 @@ class User(Base):
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    username = Column(String)
     fullname = Column(String)
 
     def __repr__(self):
-        return "<User(%r, %r)>" % (self.name, self.fullname)
+        return "<User(%r, %r)>" % (self.username, self.fullname)
 
 
 ### slide::
@@ -29,7 +29,7 @@ class User(Base):
 
 User.__table__
 
-### slide::
+### slide:: i
 # The Mapper object mediates the relationship between User
 # and the "user" Table object.  This mapper object is generally behind
 # the scenes.
@@ -40,17 +40,25 @@ User.__mapper__
 # User has a default constructor, accepting field names
 # as arguments.
 
-spongebob = User(name="spongebob", fullname="Spongebob Squarepants")
+spongebob = User(username="spongebob", fullname="Spongebob Squarepants")
+spongebob
 
 ### slide::
-# The "id" field is the primary key, which starts as None
-# if we didn't set it explicitly.
+# Attributes which we didn't set, such as the "id", are displayed as
+# None when we access them
 
-print(spongebob.name, spongebob.fullname)
-print(spongebob.id)
+repr(spongebob.id)
+
+### slide:: i
+# Since SQLAlchemy 1.0, these "implicit" attribute values are not
+# actually part of the object's state even when we access them.
+
+spongebob.__dict__
+
 
 ### slide:: p
-# The MetaData object is here too, available from the Base.
+# Using our Base, we can create a database schema for this class using
+# a MetaData object that is part of the Base.
 
 from sqlalchemy import create_engine
 
@@ -60,7 +68,9 @@ with engine.begin() as connection:
 
 ### slide::
 # To persist and load User objects from the database, we
-# use a Session object.
+# use a Session object.  The Session object makes use of a connection
+# factory (i.e. an Engine) and will handle the job of connecting,
+# committing, and releasing connections to this engine.
 
 from sqlalchemy.orm import Session
 
@@ -70,34 +80,44 @@ session = Session(bind=engine)
 # new objects are placed into the Session using add().
 session.add(spongebob)
 
-### slide:: pi
-# the Session will *flush* *pending* objects
-# to the database before each Query.
+### slide:: i
+# This did not yet modify the database, however the object is now known as
+# **pending**.  We can see the "pending" objects by looking at the session.new
+# attribute.
+session.new
 
-also_spongebob = session.query(User).filter_by(name="spongebob").first()
+
+### slide:: p
+# We can now query for this **pending** row, using an ORM query. the way
+# this will work is the ORM will first **flush** pending changes to the
+# database, then emit a SELECT.  The ORM Query object is much like the
+# select(), but also can deliver results directly.
+
+also_spongebob = session.query(User).filter_by(username="spongebob").first()
 also_spongebob
 
 ### slide::
 # the User object we've inserted now has a value for ".id"
-print(spongebob.id)
+spongebob.id
 
-### slide::
+### slide:: i
 # the Session maintains a *unique* object per identity.
-# so "spongebob" and "our_user" are the *same* object
+# so "spongebob" and "also_spongebob" are the *same* object
 
 spongebob is also_spongebob
 
 ### slide::
+### title:: Making Changes
 # Add more objects to be pending for flush.
 
 session.add_all(
     [
-        User(name="patrick", fullname="Patrick Star"),
-        User(name="sandy", fullname="Sandy Cheeks"),
+        User(username="patrick", fullname="Patrick Star"),
+        User(username="sandy", fullname="Sandy Cheeks"),
     ]
 )
 
-### slide::
+### slide:: i
 # modify "spongebob" - the object is now marked as *dirty*.
 
 spongebob.fullname = "Spongebob Jones"
@@ -107,7 +127,7 @@ spongebob.fullname = "Spongebob Jones"
 
 session.dirty
 
-### slide::
+### slide:: i
 # and can also tell us which objects are pending...
 
 session.new
@@ -126,34 +146,36 @@ session.commit()
 spongebob.fullname
 
 ### slide::
+### title:: rolling back changes
 # Make another "dirty" change, and another "pending" change,
 # that we might change our minds about.
 
-spongebob.name = "Spongy"
-fake_user = User(name="fakeuser", fullname="Invalid")
+spongebob.username = "Spongy"
+fake_user = User(username="fakeuser", fullname="Invalid")
 session.add(fake_user)
 
 ### slide:: p
 # run a query, our changes are flushed; results come back.
 
-session.query(User).filter(User.name.in_(["Spongy", "fakeuser"])).all()
+session.query(User).filter(User.username.in_(["Spongy", "fakeuser"])).all()
 
 ### slide::
 # But we're inside of a transaction.  Roll it back.
 session.rollback()
 
 ### slide:: p
-# spongebob's name is back to normal
-spongebob.name
+# Again, the transaction is over, objects are expired.
+# Accessing an attribute refreshes the object and the "Spongy" username is gone
+spongebob.username
 
 ### slide::
 # "fake_user" has been evicted from the session.
 fake_user in session
 
-### slide:: p
+### slide:: pi
 # and the data is gone from the database too.
 
-session.query(User).filter(User.name.in_(["spongebob", "fakeuser"])).all()
+session.query(User).filter(User.username.in_(["spongebob", "fakeuser"])).all()
 
 
 ### slide::
@@ -161,15 +183,18 @@ session.query(User).filter(User.name.in_(["spongebob", "fakeuser"])).all()
 # The attributes on our mapped class act like Column objects, and
 # produce SQL expressions.
 
-print(User.name == "spongebob")
+print(User.username == "spongebob")
 
 
 ### slide::
-# This works similarly as the core select().  ORM Query adds lots of additional
+# Within the ORM, we historically use these expressions with the
+# Query object, which is very similar to select(), but adds ORM-specific
 # functionalities in terms of how it interprets what is passed.   Here,
 # an *entity*, rather than a plain Table or Column object, is passed.
 
-query = session.query(User).filter(User.name == "spongebob").order_by(User.id)
+query = (
+    session.query(User).filter(User.username == "spongebob").order_by(User.id)
+)
 
 ### slide:: ip
 # The ORM Query then returns actual User objects.  in this case,
@@ -181,19 +206,21 @@ query.all()
 ### slide:: p
 # Later, Query was enhanced to also be able to return rows of individual
 # columns...
-for name, fullname in session.query(User.name, User.fullname):
-    print(name, fullname)
+for username, fullname in session.query(User.username, User.fullname):
+    print(username, fullname)
 
 ### slide:: p
 # as well as combinations of "entities" and columns
-for row in session.query(User, User.name):
-    print(row.User, row.name)
+for row in session.query(User, User.username):
+    print(row.User, row.username)
 
 ### slide:: p
 # the WHERE clause is either by filter_by(), which is convenient
 
-for (name,) in session.query(User.name).filter_by(fullname="Spongebob Jones"):
-    print(name)
+for (username,) in session.query(User.username).filter_by(
+    fullname="Spongebob Jones"
+):
+    print(username)
 
 ### slide:: p
 # or filter(), which works just like select().where().
@@ -202,7 +229,7 @@ from sqlalchemy import or_
 
 for user in (
     session.query(User)
-    .filter(User.name == "spongebob")
+    .filter(User.username == "spongebob")
     .filter(or_(User.fullname == "Spongebob Jones", User.id < 5))
 ):
     print(user)

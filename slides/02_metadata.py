@@ -84,7 +84,7 @@ with engine.begin() as conn:
 ### slide:: p
 # table metadata also allows for constraints and indexes.
 # ForeignKey is used to link one column to a remote primary
-# key.
+# key.  Note we can omit the datatype for a ForeignKey column.
 
 from sqlalchemy import ForeignKey
 
@@ -93,7 +93,7 @@ addresses_table = Table(
     metadata,
     Column("id", Integer, primary_key=True),
     Column("email_address", String(100), nullable=False),
-    Column("user_id", Integer, ForeignKey("user.id")),
+    Column("user_id", ForeignKey("user.id"), nullable=False),
 )
 
 with engine.begin() as conn:

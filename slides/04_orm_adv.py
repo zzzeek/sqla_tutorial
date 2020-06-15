@@ -14,13 +14,13 @@ class User(Base):
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    username = Column(String)
     fullname = Column(String)
 
     addresses = relationship("Address", back_populates="user")
 
     def __repr__(self):
-        return "<User(%r, %r)>" % (self.name, self.fullname)
+        return "<User(%r, %r)>" % (self.username, self.fullname)
 
 
 ### slide::
@@ -35,7 +35,7 @@ class Address(Base):
 
     id = Column(Integer, primary_key=True)
     email_address = Column(String, nullable=False)
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(ForeignKey("user.id"), nullable=False)
 
     user = relationship("User", back_populates="addresses")
 
@@ -61,9 +61,9 @@ session = Session(bind=engine)
 
 session.add_all(
     [
-        User(name="spongebob", fullname="Spongebob Squarepants"),
-        User(name="sandy", fullname="Sandy Cheeks"),
-        User(name="patrick", fullname="Patrick Star"),
+        User(username="spongebob", fullname="Spongebob Squarepants"),
+        User(username="sandy", fullname="Sandy Cheeks"),
+        User(username="patrick", fullname="Patrick Star"),
     ]
 )
 session.commit()
@@ -71,8 +71,15 @@ session.commit()
 ### slide::
 # a new User object also gains an empty "addresses" collection now.
 
-squidward = User(name="squidward", fullname="Squidward Tentacles")
+squidward = User(username="squidward", fullname="Squidward Tentacles")
 squidward.addresses
+
+
+### slide:: i
+# New in 1.4, in the same way that column attributes are not part of the
+# object's state by accessing it, neither are collections, until they are
+# mutated.
+squidward.__dict__
 
 ### slide::
 # populate this collection with new Address objects.
@@ -112,31 +119,41 @@ squidward.addresses
 # collections and references are updated by manipulating objects themselves;
 # setting up of foreign key column values is handled automatically.
 
-spongebob = session.query(User).filter_by(name="spongebob").one()
+spongebob = session.query(User).filter_by(username="spongebob").one()
 squidward.addresses[1].user = spongebob
 
 spongebob.addresses
 
 session.commit()
 
+### slide::
+# Questions before the next section?
 
 ### slide:: p
-### title: Querying with multiple tables
+### title:: Querying with multiple tables
 # Query can select from multiple tables at once. Below selects from
 # two different entities.  Results are returned as rows with two
 # "columns", a User and an Address.
 
-session.query(User, Address).filter(User.id == Address.user_id).all()
+for row in session.query(User, Address).filter(User.id == Address.user_id):
+    print(row)
 
 ### slide:: p
-# ORM query creates joins usually using the .join() method.
+# ORM query creates joins usually using the .join() method.  Like the Core
+# join() methods, it can figure out the ON clause for simple cases
 
+session.query(User, Address).join(Address).all()
+
+
+### slide:: pi
+# or you can give it an explicit SQL expression for the ON clause
 session.query(User, Address).join(Address, User.id == Address.user_id).all()
 
 ### slide:: p
-# the most succinct way to join is to use the relationship-bound attribute.
+# however the most accurate and succinct way is to use the relationship-bound
+# attribute.
 
-session.query(User.name).join(User.addresses).filter(
+session.query(User.username).join(User.addresses).filter(
     Address.email_address == "squidward@gmail.com"
 ).first()
 
@@ -152,36 +169,49 @@ session.query(User).join(a1).join(a2).filter(
 ).filter(a2.email_address == "squidward@hotmail.com").all()
 
 ### slide:: p
+# to join() to an aliased() object with more specificity, a form such
+# as "Class.relationship.of_type(aliased)" may be used
+
+session.query(User).join(User.addresses.of_type(a1)).join(
+    User.addresses.of_type(a2)
+).filter(a1.email_address == "squidward@gmail.com").filter(
+    a2.email_address == "squidward@hotmail.com"
+).all()
+
+### slide:: p
 # We can also join with subqueries.  subquery() returns
-# an "alias" construct for us to use.
+# a Subquery construct for us to use.  This converts the ORM Query
+# object into a Core select().subquery() construct.
 
 from sqlalchemy import func
 
 subq = (
-    session.query(
-        func.count(Address.id).label("count"), User.id.label("user_id")
-    )
-    .join(Address.user)
-    .group_by(User.id)
+    session.query(func.count(Address.id).label("count"), Address.user_id)
+    .group_by(Address.user_id)
     .subquery()
 )
 
-session.query(User.name, func.coalesce(subq.c.count, 0)).outerjoin(
+session.query(User.username, func.coalesce(subq.c.count, 0)).outerjoin(
     subq, User.id == subq.c.user_id
 ).all()
 
+### slide::
+# Questions before the next section?
+
 ### slide:: p
 ### title:: Eager Loading
-# the "N plus one" problem refers to the many SELECT statements
-# emitted when loading collections against a parent result
+# the "N plus one" problem is an ORM issue which refers to the many SELECT
+# statements emitted when loading collections against a parent result.
+# As SQLAlchemy is a full featured ORM, we of course include this! :)
 
 for user in session.query(User):
     print(user, user.addresses)
 
 ### slide:: p
-# *eager loading* solves this problem by loading *all* collections
-# at once.  selectinload is currently the most effective eager loader
-# for collections.
+# However, SQLAlchemy was designed from the start to tame the "N plus one"
+# problem by implementing **eager loading**.  Eager loading is now very mature,
+# and the most effective strategy for collections is currently the
+# **selectinload** option.
 
 session.rollback()  # so we can see the load happen again.
 
@@ -191,8 +221,10 @@ for user in session.query(User).options(selectinload(User.addresses)):
     print(user, user.addresses)
 
 ### slide:: p
-# joinedload() uses a LEFT OUTER JOIN or JOIN to load parent + child in one query.
-# it is best tailored towards many-to-one relationships
+# The oldest eager loading strategy is joinedload().  This uses a LEFT OUTER
+# JOIN or INNER JOIN to load parent + child in one query.  joinedload() can
+# work for collections as well, however it is best tailored towards many-to-one
+# relationships, particularly those where the foreign key is "not null".
 
 session.rollback()
 
@@ -204,33 +236,38 @@ for address_obj in session.query(Address).options(
     print(address_obj.email_address, address_obj.user.username)
 
 ### slide:: p
+### title:: Instant Zen of Eager Loading
 # eager loading *does not* change the *result* of the Query.
-# only how related collections are loaded.
+# only how related collections are loaded.   An explicit join()
+# can be mixed with the joinedload() and they are kept separate
 
 for address in (
     session.query(Address)
     .join(Address.user)
-    .filter(User.name == "squidward")
+    .filter(User.username == "squidward")
     .options(joinedload(Address.user))
 ):
     print(address, address.user)
 
 ### slide:: p
-# to join() *and* joinedload() at the same time without using two
-# JOIN clauses, use contains_eager()
+# To optimize the common case of "join to many-to-one and also load it on
+# the object", the contains_eager() option is used
 
 from sqlalchemy.orm import contains_eager
 
 for address in (
     session.query(Address)
     .join(Address.user)
-    .filter(User.name == "squidward")
+    .filter(User.username == "squidward")
     .options(contains_eager(Address.user))
 ):
     print(address, address.user)
 
+### slide::
+# Questions before the next section?
+
 ### slide:: p
-### Title: The basic idea of ORM query in 1.4 /2.0
+### title:: What's new in 1.4 / 2.0 ?
 # As Query has evolved for years to look more and more like a select(),
 # the next step is that select() and Query() basically merge
 
@@ -239,7 +276,7 @@ from sqlalchemy.future import select as future_select
 stmt = (
     future_select(User, Address.email_address)
     .join(User.addresses)
-    .order_by(User.name, Address.email_address)
+    .order_by(User.username, Address.email_address)
 )
 
 result = session.execute(stmt)
@@ -265,12 +302,20 @@ user = result.scalar()
 # select() also gains features taken from the ORM, that now work in Core,
 # like join() and filter_by().
 
-stmt = future_select(User.__table__).join(Address).filter_by(username="sandy")
+stmt = future_select(User).filter_by(username="squidward").join(Address)
 
 with engine.connect() as connection:
     result = connection.execute(stmt)
-
     result.all()
+
+
+### slide:: p
+# the unification also rearranges things on the inside and is actually
+# part of how ORM Query, select() and everything else are now cachable,
+# including that time spent on the outside of the cache building the
+# object is at a minimum.
+
+session.execute(stmt).scalars().all()
 
 
 ### slide::

@@ -164,88 +164,65 @@ session.query(User).filter(User.name.in_(["spongebob", "fakeuser"])).all()
 print(User.name == "spongebob")
 
 
-### slide:: p
-# This works similarly as the core select(), but Query()
-# object provides a lot more functionality,
-# here selecting the User *entity*.
+### slide::
+# This works similarly as the core select().  ORM Query adds lots of additional
+# functionalities in terms of how it interprets what is passed.   Here,
+# an *entity*, rather than a plain Table or Column object, is passed.
 
 query = session.query(User).filter(User.name == "spongebob").order_by(User.id)
 
+### slide:: ip
+# The ORM Query then returns actual User objects.  in this case,
+# it returns them directly and not as a "row".  When Query was first
+# implemented years ago, this is all it could do.
 query.all()
 
 
 ### slide:: p
-# Query can also return individual columns
-
+# Later, Query was enhanced to also be able to return rows of individual
+# columns...
 for name, fullname in session.query(User.name, User.fullname):
     print(name, fullname)
 
 ### slide:: p
-# and can mix entities / columns together.
-
+# as well as combinations of "entities" and columns
 for row in session.query(User, User.name):
     print(row.User, row.name)
 
 ### slide:: p
-# Array indexes will OFFSET to that index and LIMIT by one...
-
-u = session.query(User).order_by(User.id)[2]
-print(u)
-
-### slide:: pi
-# and array slices work too.
-
-for u in session.query(User).order_by(User.id)[1:3]:
-    print(u)
-
-### slide:: p
 # the WHERE clause is either by filter_by(), which is convenient
 
-for (name,) in session.query(User.name).filter_by(fullname="spongebob Jones"):
+for (name,) in session.query(User.name).filter_by(fullname="Spongebob Jones"):
     print(name)
 
 ### slide:: p
-# or filter(), which is more flexible
-
-for (name,) in session.query(User.name).filter(User.fullname == "spongebob Jones"):
-    print(name)
-
-### slide:: p
-# conjunctions can be passed to filter() as well
+# or filter(), which works just like select().where().
 
 from sqlalchemy import or_
-
-for (name,) in session.query(User.name).filter(
-    or_(User.fullname == "spongebob Jones", User.id < 5)
-):
-    print(name)
-
-### slide::
-# multiple filter() calls join by AND just like select().where()
 
 for user in (
     session.query(User)
     .filter(User.name == "spongebob")
-    .filter(User.fullname == "spongebob Jones")
+    .filter(or_(User.fullname == "Spongebob Jones", User.id < 5))
 ):
     print(user)
 
 ### slide::
 # Query has some variety for returning results
 
-query = session.query(User).filter_by(fullname="spongebob Jones")
+query = session.query(User).filter_by(fullname="Spongebob Jones")
 
-### slide:: p
+### slide:: pi
 # all() returns a list
 
 query.all()
 
-### slide:: p
+### slide:: pi
 # first() returns the first row, or None
 
 query.first()
 
-### slide:: p
+### slide:: pi
 # one() returns the first row and verifies that there's one and only one
 
 query.one()

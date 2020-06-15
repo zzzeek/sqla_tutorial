@@ -108,19 +108,44 @@ select_stmt = future_select(
 ).join(address_table)
 connection.execute(select_stmt).fetchall()
 
+### slide:: p
+# in order to refer to the same table mutiple times in the FROM clause,
+# the .alias() construct will create an alias of a table.
+address_alias_1 = address_table.alias()
+address_alias_2 = address_table.alias()
+
+select_stmt = (
+    select(
+        [
+            user_table.c.username,
+            address_alias_1.c.email_address,
+            address_alias_2.c.email_address,
+        ]
+    )
+    .select_from(user_table.join(address_alias_1).join(address_alias_2))
+    .where(address_alias_1.c.email_address == "spongebob@spongebob.com")
+    .where(address_alias_2.c.email_address == "spongebob@gmail.com")
+)
+
+connection.execute(select_stmt).fetchall()
 
 ### slide::
-# A subquery is produced using the .alias(), or .subquery() method
+# A subquery is used much like a table alias, except we start with a select
+# statement.   We call the .alias(), or .subquery() method
 # of select()  (1.3 only has .alias())
 
-select_alias = select_stmt.alias()
+select_subq = (
+    select([user_table.c.username, address_table.c.email_address])
+    .select_from(user_table.join(address_table))
+    .alias()
+)
 
-### slide:: i
+### slide:: pi
 # the subquery object itself has a .c attribute, and is used just like
 # a table.
 
-stmt = select([select_alias.c.username]).where(
-    select_alias.c.username == "spongebob"
+stmt = select([select_subq.c.username]).where(
+    select_subq.c.username == "spongebob"
 )
 print(stmt)
 
@@ -174,9 +199,11 @@ connection.execute(username_plus_count).fetchall()
 # we indicate this intent using the as_scalar() or scalar_subquery() method
 # after construction (1.3 only has as_scalar() :)  )
 
-address_corr = select([func.count(address_table.c.id)]).where(
-    user_table.c.id == address_table.c.user_id
-).as_scalar()
+address_corr = (
+    select([func.count(address_table.c.id)])
+    .where(user_table.c.id == address_table.c.user_id)
+    .as_scalar()
+)
 
 ### slide:: i
 # the subquery here refers to two tables.  printing it alone,
@@ -188,7 +215,7 @@ print(address_corr)
 # SQL expression, omitting a FROM that is found in the immediate
 # enclosing SELECT.
 
-select_stmt = select([user_table.c.username, address_corr.as_scalar()])
+select_stmt = select([user_table.c.username, address_corr])
 print(select_stmt)
 
 
@@ -197,4 +224,3 @@ print(select_stmt)
 
 
 ### slide::
-

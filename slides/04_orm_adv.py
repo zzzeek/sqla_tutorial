@@ -1,9 +1,11 @@
 ### slide::
-### title:: Advanced Object Relational Mapping
-# start with the same mapping as before...
+### title:: Relationships, Joins, What's New ?
+# start with the same mapping as before.  Except we will also
+# give it a one-to-many **relationship** to a second entity.
 
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
@@ -15,15 +17,17 @@ class User(Base):
     name = Column(String)
     fullname = Column(String)
 
+    addresses = relationship("Address", back_populates="user")
+
     def __repr__(self):
         return "<User(%r, %r)>" % (self.name, self.fullname)
 
 
 ### slide::
-# But then, we'll also add a second table.
+# for the other end of one-to-many, create another mapped class with
+# a ForeignKey referring back to User
 
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import relationship
 
 
 class Address(Base):
@@ -33,7 +37,7 @@ class Address(Base):
     email_address = Column(String, nullable=False)
     user_id = Column(Integer, ForeignKey("user.id"))
 
-    user = relationship("User", backref="addresses")
+    user = relationship("User", back_populates="addresses")
 
     def __repr__(self):
         return "<Address(%r)>" % self.email_address
@@ -45,7 +49,8 @@ class Address(Base):
 from sqlalchemy import create_engine
 
 engine = create_engine("sqlite://")
-Base.metadata.create_all(engine)
+with engine.connect() as connection:
+    Base.metadata.create_all(connection)
 
 ### slide:: p
 # Insert data into the User table...
@@ -80,7 +85,7 @@ squidward.addresses = [
 ]
 
 ### slide::
-# the "backref" sets up Address.user for each User.address.
+# "back populates" sets up Address.user for each User.address.
 
 squidward.addresses[1]
 squidward.addresses[1].user
@@ -105,8 +110,8 @@ squidward.addresses
 squidward.addresses
 
 ### slide:: p
-# collections and references are updated by manipulating objects,
-# not primary / foreign key values.
+# collections and references are updated by manipulating objects themselves;
+# setting up of foreign key column values is handled automatically.
 
 spongebob = session.query(User).filter_by(name="spongebob").one()
 squidward.addresses[1].user = spongebob
@@ -115,44 +120,30 @@ spongebob.addresses
 
 session.commit()
 
+
 ### slide:: p
-# Query can select from multiple tables at once.
-# Below is an *implicit join*.
+### title: Querying with multiple tables
+# Query can select from multiple tables at once. Below selects from
+# two different entities.  Results are returned as rows with two
+# "columns", a User and an Address.
 
 session.query(User, Address).filter(User.id == Address.user_id).all()
 
 ### slide:: p
-# join() is used to create an explicit JOIN.
+# ORM query creates joins usually using the .join() method.
 
 session.query(User, Address).join(Address, User.id == Address.user_id).all()
 
 ### slide:: p
-# The most succinct and accurate way to join() is to use the
-# the relationship()-bound attribute to specify ON.
-
-session.query(User, Address).join(User.addresses).all()
-
-### slide:: p
-# join() will also figure out very simple joins just using entities.
-
-session.query(User, Address).join(Address).all()
-
-
-### slide:: p
-# Either User or Address may be referred to anywhere in the query.
+# the most succinct way to join is to use the relationship-bound attribute.
 
 session.query(User.name).join(User.addresses).filter(
     Address.email_address == "squidward@gmail.com"
 ).first()
 
 ### slide:: p
-# we can specify an explicit FROM using select_from().
-
-session.query(User, Address).select_from(Address).join(Address.user).all()
-
-### slide:: p
-# A query that refers to the same entity more than once in the FROM
-# clause requires *aliasing*.
+# the ORM version of table.alias() is to use the aliased() function
+# on a mapped entity.
 
 from sqlalchemy.orm import aliased
 
@@ -247,5 +238,39 @@ for address in (
 
 ### slide::
 ### title:: Questions?
+
+### slide:: p
+### Title: So what's the 1.4 / 2.0 change?
+# The Query object evolved in early SQLAlchemy versions with a very limited
+# set of features compared to what select() could do.  However, it has
+# over the years gained all the functionality of select(), but looks
+# totally different
+
+from sqlalchemy import select
+
+s1 = select([User.__table__]).where(User.__table__.c.username == "spongebob")
+
+result = session.execute(s1)
+user = result.first()[0]
+
+
+q1 = session.query(User).filter(User.username == "spongebob")
+
+user = q1.first()
+
+### slide:: p
+# there is both a need for Query to have better composability than it does
+# currently in some cases, as well as to have a more flexible result
+# system.   select() needs some help too.  So in 1.4 / 2.0, they are
+# *unified*.
+
+from sqlalchemy.future import select as future_select
+
+stmt = future_select(User).where(User.username == "spongebob")
+result = session.execute(stmt)
+
+user = result.scalar()
+
+
 
 ### slide::

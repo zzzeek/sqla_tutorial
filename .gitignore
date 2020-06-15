@@ -2,4 +2,6 @@
 *.orig
 *.pdf
 **/_build
+**/*.db
+**/.venv
 dist

@@ -65,7 +65,9 @@ SQLAlchemy Philosophies
 * Never "hide" the database or its concepts - developers must know / continue
   to think in SQL...
 * Instead....provide automation and DRY
-* Allow expression of DB/SQL tasks using declarative patterns
+* Favor declarative and compositional patterns over flags and switches
+  whenever possible
+* Stay true to SQL
 
 
 SQLAlchemy Overview
@@ -187,10 +189,17 @@ SQLAlchemy is like an Onion
     :align: center
 
 
-.. rst-class:: center-text
+Meet the Characters for Today's SQL Examples
+============================================
 
-Can be learned from the inside out, or outside
-in
+.. rst-class:: subheader
+
+    Courtesy google.com
+
+.. image:: spongebob.png
+    :align: center
+    :class: titleimage
+
 
 Level 1, Engine, Connection, Transactions
 ==========================================

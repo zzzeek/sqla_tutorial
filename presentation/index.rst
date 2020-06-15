@@ -128,18 +128,6 @@ Some of which didn't exist when this tutorial was first written !
   ideas.    Many more are on the Github wiki.
 
 
-SQLAlchemy is like an Onion
-=================================
-
-.. image:: onion.png
-    :align: center
-
-
-.. rst-class:: center-text
-
-Can be learned from the inside out, or outside
-in
-
 
 The Big News:  1.4, 2.0
 ========================
@@ -192,6 +180,18 @@ The Big News:  1.4, 2.0
   is cached.
 
 
+SQLAlchemy is like an Onion
+=================================
+
+.. image:: onion.png
+    :align: center
+
+
+.. rst-class:: center-text
+
+Can be learned from the inside out, or outside
+in
+
 Level 1, Engine, Connection, Transactions
 ==========================================
 
@@ -238,12 +238,14 @@ Important DBAPI Facts
 
 * DBAPI assumes by default that a transaction is always in progress. There is
   no ``.begin()`` method, only ``.commit()`` and ``.rollback()``.
+* Most DBAPIs achieve this by employing an "autobegin" system that is typically
+  invoked when the first statement is run.
 * Most DBAPIs now have an ".autocommit" feature, disabled by default. When
-  enabled, there is **never** a transaction in progress; ``.commit()`` and
-  ``.rollback()`` are no-ops.
+  enabled, the "autobegin" is turned off and there is never a transaction in
+  progress; ``.commit()`` and ``.rollback()`` are no-ops.
 * DBAPI encourages the use of bound parameters when statements are executed,
   but it has **six** different formats.
-* All DBAPIs have **massive** inconsistencies in how they behave.  It is not
+* All DBAPIs have significant inconsistencies in how they behave.  It is not
   possible to write non-trivial DBAPI-agnostic code without the use of
   libraries on top of it.
 
@@ -287,18 +289,6 @@ database connectivity.
 
   .venv/bin/sliderepl 01_engine.py
 
-
-Engine Facts
-=================
-
-* For 1.4 on forward, ``connection.execute()`` is the single way to execute
-  statements.
-* Previous methods like ``engine.execute()``, ``statement.execute()`` are
-  deprecated.
-* To execute a raw string SQL with ``Connection.execute()``, use ``text()``.
-  Passing a string directly is deprecated.
-* In 1.4, ``Connection`` also has a method ``connection.exec_driver_sql()``
-  which accepts a string and directly passes it to the underlying DBAPI in use.
 
 
 Level 2, Table Metadata, Reflection, DDL

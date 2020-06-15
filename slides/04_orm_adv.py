@@ -64,7 +64,6 @@ session.add_all(
         User(name="spongebob", fullname="Spongebob Squarepants"),
         User(name="sandy", fullname="Sandy Cheeks"),
         User(name="patrick", fullname="Patrick Star"),
-
     ]
 )
 session.commit()
@@ -171,15 +170,6 @@ session.query(User.name, func.coalesce(subq.c.count, 0)).outerjoin(
     subq, User.id == subq.c.user_id
 ).all()
 
-### slide::
-### title:: Exercises
-# 1. Run this SQL JOIN:
-#
-#    SELECT user.name, address.email_address FROM user
-#    JOIN address ON user.id=address.user_id WHERE
-#    address.email_address='j25@yahoo.com'
-#
-
 ### slide:: p
 ### title:: Eager Loading
 # the "N plus one" problem refers to the many SELECT statements
@@ -190,24 +180,28 @@ for user in session.query(User):
 
 ### slide:: p
 # *eager loading* solves this problem by loading *all* collections
-# at once.
+# at once.  selectinload is currently the most effective eager loader
+# for collections.
 
 session.rollback()  # so we can see the load happen again.
 
-from sqlalchemy.orm import subqueryload
+from sqlalchemy.orm import selectinload
 
-for user in session.query(User).options(subqueryload(User.addresses)):
+for user in session.query(User).options(selectinload(User.addresses)):
     print(user, user.addresses)
 
 ### slide:: p
-# joinedload() uses a LEFT OUTER JOIN to load parent + child in one query.
+# joinedload() uses a LEFT OUTER JOIN or JOIN to load parent + child in one query.
+# it is best tailored towards many-to-one relationships
 
 session.rollback()
 
 from sqlalchemy.orm import joinedload
 
-for user in session.query(User).options(joinedload(User.addresses)):
-    print(user, user.addresses)
+for address_obj in session.query(Address).options(
+    joinedload(Address.user, innerjoin=True)
+):
+    print(address_obj.email_address, address_obj.user.username)
 
 ### slide:: p
 # eager loading *does not* change the *result* of the Query.
@@ -235,42 +229,52 @@ for address in (
 ):
     print(address, address.user)
 
-
-### slide::
-### title:: Questions?
-
 ### slide:: p
-### Title: So what's the 1.4 / 2.0 change?
-# The Query object evolved in early SQLAlchemy versions with a very limited
-# set of features compared to what select() could do.  However, it has
-# over the years gained all the functionality of select(), but looks
-# totally different
-
-from sqlalchemy import select
-
-s1 = select([User.__table__]).where(User.__table__.c.username == "spongebob")
-
-result = session.execute(s1)
-user = result.first()[0]
-
-
-q1 = session.query(User).filter(User.username == "spongebob")
-
-user = q1.first()
-
-### slide:: p
-# there is both a need for Query to have better composability than it does
-# currently in some cases, as well as to have a more flexible result
-# system.   select() needs some help too.  So in 1.4 / 2.0, they are
-# *unified*.
+### Title: The basic idea of ORM query in 1.4 /2.0
+# As Query has evolved for years to look more and more like a select(),
+# the next step is that select() and Query() basically merge
 
 from sqlalchemy.future import select as future_select
+
+stmt = (
+    future_select(User, Address.email_address)
+    .join(User.addresses)
+    .order_by(User.name, Address.email_address)
+)
+
+result = session.execute(stmt)
+
+### slide:: p
+# part of the reason is that people wanted more flexibility in how
+# Query returns results.   so now the full Result object is returned, which
+# allows for a method chained approach to customize how results are
+# returned.
+
+result.scalars().unique().all()
+
+### slide:: p
+# additionally, the strange duplication of query.filter() / select.where()
+# is solved by making it all just select.where().
 
 stmt = future_select(User).where(User.username == "spongebob")
 result = session.execute(stmt)
 
 user = result.scalar()
 
+### slide:: p
+# select() also gains features taken from the ORM, that now work in Core,
+# like join() and filter_by().
+
+stmt = future_select(User.__table__).join(Address).filter_by(username="sandy")
+
+with engine.connect() as connection:
+    result = connection.execute(stmt)
+
+    result.all()
+
+
+### slide::
+### title:: Questions?
 
 
 ### slide::

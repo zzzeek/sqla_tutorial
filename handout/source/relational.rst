@@ -5,22 +5,25 @@ Relational Database Review
 Introduction
 ============
 
-This document is a brief overview of key relational database concepts, including SQL basics as well as the basics
-of transactions.  SQLAlchemy is somewhat unique in that it doesn't try to hide any of these concepts
-within regular use, and the developer of a SQLAlchemy-enabled application will
-be dealing with concepts of SQL, transactions, and Python expressions and object
-models, all at the same time.   While this may sound daunting, it is in practice actually a better way
-to work, instead of relying upon a tool to hide away the existence of the relational database.  Best
-of all, once the practice of integrating all three techniques is mastered,
-you'll be able to call yourself an Alchemist :).
+This document is a brief overview of key relational database concepts,
+including SQL basics as well as the basics of transactions.  SQLAlchemy is
+somewhat unique in that it doesn't try to hide any of these concepts within
+regular use, and the developer of a SQLAlchemy-enabled application will be
+dealing with concepts of SQL, transactions, and Python expressions and object
+models, all at the same time.   While this may sound daunting, it is in
+practice actually a better way to work, instead of relying upon a tool to hide
+away the existence of the relational database.  Best of all, once the practice
+of integrating all three techniques is mastered, you'll be able to call
+yourself an Alchemist :).
 
-The *Introduction to SQLAlchemy* tutorial starts off with the assumption that the student is familiar
-with the concepts outlined in this document - if they're new to you, spending some time familiarizing
-will be time well spent, and if they're old hat, you'll be in good shape to jump right into the
-SQLAlchemy tutorial.
+The tutorial starts off with the assumption that the student is familiar with
+the concepts outlined in this document - if they're new to you, spending some
+time familiarizing will be time well spent, and if they're old hat, you'll be
+in good shape to jump right into the SQLAlchemy tutorial.
 
-Throughout this document, we'll try to refer heavily to the :doc:`Glossary <glossary>`, which
-tries to provide an overview and additional links on just about every concept.
+Throughout this document, we'll try to refer heavily to the :doc:`Glossary
+<glossary>`, which tries to provide an overview and additional links on just
+about every concept.
 
 Overview
 ========

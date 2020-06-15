@@ -1,0 +1,36 @@
+============================================
+ Introduction to SQLAlchemy 2020 - Download
+============================================
+
+This package is the full source code for the SQLAlchemy 2020 Tutorial.
+
+The main thing participants will be interested in is to walk through the
+interactive code demonstrations, which are present here in the
+./slides/ folder.
+
+The .py files in this folder are plain Python files and can be read directly
+as the code is presented.  Alternatively, they can be run within the same
+"slide runner" environment as follows (prerequisites: git, Python virtualenv
+are installed):
+
+1. Download this repo using ``git clone``::
+
+    git clone https://github.com/zzzeek/sqla_tutorial
+
+2. cd into the ./slides directory and create a virtual environment::
+
+    cd sqla_tutorial/slides
+    virtualenv .venv
+
+3. install requirements::
+
+    .venv/bin/pip install -r requirements.txt
+
+4. Run slides::
+
+    .venv/bin/sliderepl 01_engine_usage.py
+
+    .venv/bin/sliderepl 02_metadata.py
+
+    # ... etc
+

@@ -12,7 +12,6 @@ Contents:
    :maxdepth: 2
 
    front
-   setup
    relational
    glossary
    reading

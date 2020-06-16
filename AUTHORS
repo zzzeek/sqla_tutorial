@@ -1,0 +1,9 @@
+Introduction to SQLAlchemy 2020 was created by Michael Bayer. The contents of
+"slides" and "presentation", as well as the handout/relational.rst file are
+copyright (c) 2008-2020 by Michael Bayer.   Refer to the LICENSE file for
+licensing terms.
+
+Credit to Jason Kirtland for the "slide runner" tool as well as the reading
+list within the "handout" section.
+
+

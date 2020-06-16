@@ -5,7 +5,7 @@
 
 from sqlalchemy import MetaData
 from sqlalchemy import Table, Column
-from sqlalchemy import Integer, String, Text
+from sqlalchemy import Integer, String
 from sqlalchemy import select
 
 metadata = MetaData()
@@ -80,6 +80,13 @@ with engine.begin() as conn:
     fancy_table.create(conn)
 
 ### slide:: p
+# at this point, the two Table objects we've created are part of a collection
+# in the MetaData object called .tables
+metadata.tables.keys()
+metadata.tables['user']
+
+
+### slide:: p
 # table metadata also allows for constraints and indexes.
 # ForeignKey is used to link one column to a remote primary
 # key.  Note we can omit the datatype for a ForeignKey column.
@@ -102,6 +109,7 @@ with engine.begin() as conn:
 # which should be used for composite references.
 
 from sqlalchemy import ForeignKeyConstraint
+from sqlalchemy import Text
 
 story_table = Table(
     "story",
@@ -123,12 +131,6 @@ published_table = Table(
         ["story_id", "version_id"], ["story.story_id", "story.version_id"]
     ),
 )
-
-### slide:: p
-# at this point, all the Table objects we've created are part of a collection
-# in the MetaData object called .tables
-metadata.tables.keys()
-metadata.tables['address']
 
 ### slide:: p
 # create_all() by default checks for tables existing already

@@ -145,7 +145,7 @@ The Big News:  1.4, 2.0
 * It will include a deprecation mode that warns for all the patterns that
   2.0 will remove.
 
-1.4 / 2.0 Major Changes - Core
+1.4 / 2.0 Major Changes
 ===============================
 
 .. rst-class:: subheader
@@ -153,34 +153,14 @@ The Big News:  1.4, 2.0
 (for people who already know some SQLAlchemy)
 
 * 2.0 is Python 3 only.  1.4 still supports Python 2
-* "Connectionless" execution goes away, no more engine.execute() or
-  statement.execute() (future mode).  Connection is always used with Core.
-* "bound metadata" goes away.
-* Engine no longer implements library-level autocommit, a new .commit() method
-  is added  (future mode)
-* The result object features rows that now act fully like named tuples,
-  including ``"value in row"``  (future mode)
-* The result object has major new capabilities - ``result.columns('x', 'y')``,
-  ``result.partitions(size)``, ``result.unique()``, ``result.scalars()``, etc
+* Engine changes - autocommit is removed, "connectionless" execution is
+  removed.
+* Result set changes - rows are completely tuple-like, many new features
+  for iterating and slicing up rows
 * The vast majority of SQL compilation is now cached
-
-
-1.4 / 2.0 Major Changes - ORM
-===============================
-
-.. rst-class:: subheader
-
-(for people who already know some SQLAlchemy)
-
-* The Core select() object becomes the primary ORM interface for emitting
-  SELECT statements (future mode).  Query() is a thin facade that is no longer
-  needed
-* Declarative becomes part of ``sqlalchemy.orm``
-* ORM results are now returned using the same Result / Row objects that one
-  gets from a Core statement execution  (future mode)
-* The SQL compilation layer applies to the ORM as well, moves most
-  query-construction complexity to occur within the SQL compilation phase that
-  is cached.
+* ORM Query is unified with select(); can use select() to get ORM results
+* The Result set is unified between Core and ORM, results in both systems
+  come back in the same way
 
 
 SQLAlchemy is like an Onion
@@ -189,17 +169,9 @@ SQLAlchemy is like an Onion
 .. image:: onion.png
     :align: center
 
+.. rst-class:: center-text
 
-Meet the Characters for Today's SQL Examples
-============================================
-
-.. rst-class:: subheader
-
-    Courtesy google.com
-
-.. image:: spongebob.png
-    :align: center
-    :class: titleimage
+Can be learned from the inside out, or the outside in.
 
 
 Level 1, Engine, Connection, Transactions

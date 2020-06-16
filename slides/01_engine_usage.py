@@ -140,30 +140,7 @@ result.fetchall()
 ### slide:: p
 # in 1.4 there are fancier methods too
 result = connection.execute(text("select * from employee"))
-result.scalars('emp_name').all()
-
-### slide:: p
-# In 1.x SQLAlchemy versions, statements like INSERT statements, even
-# when they are passed as plain strings, are subject to autocommit
-# behavior.
-
-connection.execute(
-    text("insert into employee_of_month (emp_name) values (:emp_name)"),
-    {"emp_name": "spongebob"}
-)
-
-
-### slide:: p
-# In 2.0, this autocommit is removed.   There is instead a local
-# .commit() method for commit-as-you-go style use.
-
-with future_engine.connect() as future_connection:
-    future_connection.execute(
-        text("insert into employee_of_month (emp_name) values (:emp_name)"),
-        {"emp_name": "sandy"}
-    )
-    future_connection.commit()
-
+result.scalars("emp_name").all()
 
 ### slide::
 # Connection has a .close() method.  This **releases** the
@@ -180,6 +157,32 @@ with engine.connect() as connection:
 
     # releases connection back to the pool
 
+
+### slide:: p
+### title:: transactions, committing and autocommit
+# In 1.x SQLAlchemy versions, statements like INSERT statements, even
+# when they are passed as plain strings, are subject to autocommit
+# behavior.
+
+connection = engine.connect()
+connection.execute(
+    text("insert into employee_of_month (emp_name) values (:emp_name)"),
+    {"emp_name": "spongebob"},
+)
+
+
+### slide:: p
+# In 2.0, this autocommit is removed.   There is instead a local
+# .commit() method for commit-as-you-go style use.
+
+with future_engine.connect() as future_connection:
+    future_connection.execute(
+        text("insert into employee_of_month (emp_name) values (:emp_name)"),
+        {"emp_name": "sandy"},
+    )
+    future_connection.commit()
+
+
 ### slide:: p
 # To explicitly demarcate begin/commit, the most idiomatic way is to use the
 # .begin() method of Engine which returns a context manager that yields
@@ -188,7 +191,7 @@ with engine.connect() as connection:
 with engine.begin() as connection:
     connection.execute(
         text("insert into employee_of_month (emp_name) values (:emp_name)"),
-        {"emp_name": "squidward"}
+        {"emp_name": "squidward"},
     )
     # commits transaction, releases connection back to the connection pool.
     # rolls back if there is an exception before re-throwing
@@ -202,13 +205,13 @@ with engine.connect() as connection:
     trans = connection.begin()
     connection.execute(
         text("insert into employee (emp_name) values (:emp_name)"),
-        {"emp_name": "patrick"}
+        {"emp_name": "patrick"},
     )
     trans.commit()
     trans = connection.begin()
     connection.execute(
         text("update employee_of_month set emp_name = :emp_name"),
-        {"emp_name": "patrick"}
+        {"emp_name": "patrick"},
     )
     trans.rollback()  # sorry patrick
 
@@ -221,7 +224,7 @@ with engine.connect() as connection:
     with connection.begin() as trans:
         connection.execute(
             text("update employee_of_month set emp_name = :emp_name"),
-            {"emp_name": "squidward"}
+            {"emp_name": "squidward"},
         )
         # commits transaction, or rollback if exception
     # closes connection
@@ -236,14 +239,14 @@ with engine.connect() as connection:
         savepoint = connection.begin_nested()
         connection.execute(
             text("update employee_of_month set emp_name = :emp_name"),
-            {"emp_name": "patrick"}
+            {"emp_name": "patrick"},
         )
         savepoint.rollback()  # sorry patrick
 
         with connection.begin_nested() as savepoint:
             connection.execute(
                 text("update employee_of_month set emp_name = :emp_name"),
-                {"emp_name": "spongebob"}
+                {"emp_name": "spongebob"},
             )
             # releases savepoint
 

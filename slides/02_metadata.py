@@ -13,8 +13,8 @@ user_table = Table(
     "user",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("name", String),
-    Column("fullname", String),
+    Column("username", String(50), nullable=False),
+    Column("fullname", String(255)),
 )
 
 ### slide::
@@ -27,7 +27,7 @@ user_table.name
 # The .c. attribute of Table is an associative array
 # of Column objects, keyed on name.
 
-user_table.c.name
+user_table.c.username
 
 ### slide:: i
 # It's a bit like a Python dictionary but not totally.
@@ -37,8 +37,8 @@ print(user_table.c)
 ### slide::
 # Column itself has information about each Column, such as
 # name and type
-user_table.c.name.name
-user_table.c.name.type
+user_table.c.username.name
+user_table.c.username.type
 
 ### slide:: i
 # Table has other information available, such as the collection
@@ -52,13 +52,11 @@ print(select([user_table]))
 
 ### slide:: p
 # Table and MetaData objects can be used to generate a schema
-# in a database.
+# in a database; MetaData features the create_all() method.
 from sqlalchemy import create_engine
 
 engine = create_engine("sqlite://")
 
-# metadata.create_all() accepts an engine as well, not sure
-# if 2.0 will deprecate this yet.
 with engine.begin() as conn:
     metadata.create_all(conn)
 
@@ -127,6 +125,12 @@ published_table = Table(
 )
 
 ### slide:: p
+# at this point, all the Table objects we've created are part of a collection
+# in the MetaData object called .tables
+metadata.tables.keys()
+metadata.tables['address']
+
+### slide:: p
 # create_all() by default checks for tables existing already
 
 with engine.begin() as conn:
@@ -141,7 +145,14 @@ metadata2 = MetaData()
 
 with engine.connect() as conn:
     user_reflected = Table("user", metadata2, autoload_with=conn)
+
+
+### slide:: p
+# the user_reflected object is now filled in with all the columns
+# and constraints and is ready to use
+
 print(user_reflected.c)
+print(user_reflected.primary_key)
 print(select([user_reflected]))
 
 ### slide::
@@ -168,16 +179,21 @@ inspector.get_foreign_keys("address")
 
 
 ### slide:: p
-# it's also pretty popular these days to reflect an entire database
-# at once
+### title:: Reflecting an entire schema
+# The MetaData object also includes a feature that will reflect all the
+# tables in a particular schema at once.
 
+metadata3 = MetaData()
 with engine.connect() as conn:
-    metadata2.reflect(conn)
+    metadata3.reflect(conn)
 
 ### slide::
 # the Table objects are then in the metadata.tables collection
 
-story, published = metadata2.tables['story'], metadata2.tables['published']
+story, published = metadata3.tables['story'], metadata3.tables['published']
+
+story
+published
 
 ### slide:: i
 # ready to use

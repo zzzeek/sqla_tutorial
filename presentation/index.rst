@@ -30,8 +30,8 @@ Prerequisite Knowledge
     * structure: tables, columns, CREATE TABLE, etc.
     * querying: selecting rows with SELECT
     * modifying data with INSERT, UPDATE, DELETE
+    * general idea of database transactions (e.g. BEGIN/COMMIT/ROLLBACK)
     * joins, grouping
-    * transactions
 
 
 SQLAlchemy - Overview
@@ -49,8 +49,8 @@ SQLAlchemy - Overview
 SQLAlchemy Goals
 =================================
 
-* Provide helpers, tools and components to assist and automate database
-  development at every level
+* Provide helpers, tools and components to assist with and automate database
+  application development at every level
 * Provide a consistent and fully featured facade over the Python DBAPI
 * Provide an industrial strength, but optional, object relational mapper (ORM)
 * Act as the foundation for any number of third party or in-house tools
@@ -67,7 +67,7 @@ SQLAlchemy Philosophies
 * Instead....provide automation and DRY
 * Favor declarative and compositional patterns over flags and switches
   whenever possible
-* Stay true to SQL
+* Stay true to SQL - don't invent a new query language or relational paradigm
 
 
 SQLAlchemy Overview
@@ -152,13 +152,14 @@ The Big News:  1.4, 2.0
 
 (for people who already know some SQLAlchemy)
 
+* 2.0 is Python 3 only.  1.4 still supports Python 2
 * "Connectionless" execution goes away, no more engine.execute() or
   statement.execute() (future mode).  Connection is always used with Core.
 * "bound metadata" goes away.
 * Engine no longer implements library-level autocommit, a new .commit() method
   is added  (future mode)
-* The result object features rows that now act fully like tuples, including
-  ``"value in row"``  (future mode)
+* The result object features rows that now act fully like named tuples,
+  including ``"value in row"``  (future mode)
 * The result object has major new capabilities - ``result.columns('x', 'y')``,
   ``result.partitions(size)``, ``result.unique()``, ``result.scalars()``, etc
 * The vast majority of SQL compilation is now cached

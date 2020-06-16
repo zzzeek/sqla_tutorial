@@ -120,10 +120,18 @@ squidward.addresses
 # setting up of foreign key column values is handled automatically.
 
 spongebob = session.query(User).filter_by(username="spongebob").one()
+spongebob.addresses
 squidward.addresses[1].user = spongebob
 
+### slide:: i
+# by assigning .user on one of squidward's email addresses, the object moved
+# from one "addresses" collection to the other.  this is the back populates
+# feature at work.
 spongebob.addresses
+squidward.addresses
 
+### slide:: ip
+# commit the data.
 session.commit()
 
 ### slide::
@@ -309,7 +317,7 @@ with engine.connect() as connection:
     result.all()
 
 
-### slide:: p
+### slide:: pi
 # the unification also rearranges things on the inside and is actually
 # part of how ORM Query, select() and everything else are now cachable,
 # including that time spent on the outside of the cache building the

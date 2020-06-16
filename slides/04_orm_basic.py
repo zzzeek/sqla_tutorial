@@ -1,6 +1,6 @@
 ### slide::
 ### title:: Object Relational Mapping
-# The *declarative* system is normally used to configure
+# The *declarative* system is the primary system used to configure
 # object relational mappings.
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -105,6 +105,12 @@ spongebob.id
 # so "spongebob" and "also_spongebob" are the *same* object
 
 spongebob is also_spongebob
+
+### slide:: i
+# this is known as the **identity map**, and we can look at it on
+# the Session.
+
+session.identity_map.items()
 
 ### slide::
 ### title:: Making Changes

@@ -41,7 +41,7 @@ SQLAlchemy - Overview
 * introduced 2005
 * end-to-end system for working with the Python DBAPI, relational databases,
   and the SQL language
-* Current release 1.3.17
+* Current release 1.3.18
 * 1.4 is the next major version, which itself is a transitional version for
   **SQLAlchemy 2.0**
 
@@ -126,7 +126,7 @@ Some of which didn't exist when this tutorial was first written !
 * ``sqlalchemy.testing`` - an exported test suite that is used for third party
   dialect authors to test their dialects for full feature compliance
 * ``sqlalchemy.examples`` - includes an in-depth performance testing suite
-  as well as the home for Space Invaders and over a dozen other recipes and
+  as over a dozen other recipes and
   ideas.    Many more are on the Github wiki.
 
 
@@ -153,14 +153,16 @@ The Big News:  1.4, 2.0
 (for people who already know some SQLAlchemy)
 
 * 2.0 is Python 3 only.  1.4 still supports Python 2
-* Engine changes - autocommit is removed, "connectionless" execution is
-  removed.
+* Engine changes - "emulated" autocommit is removed (use DBAPI autocommit),
+  "connectionless" execution is removed.
 * Result set changes - rows are completely tuple-like, many new features
   for iterating and slicing up rows
 * The vast majority of SQL compilation is now cached
 * ORM Query is unified with select(); can use select() to get ORM results
 * The Result set is unified between Core and ORM, results in both systems
   come back in the same way
+* asyncio API for Core and ORM is (surprisingly) on track, using a recently
+  discovered approach to bridge async/sync APIs
 
 
 SQLAlchemy is like an Onion

@@ -177,6 +177,14 @@ result = connection.execute(select_stmt)
 for row in result:
     print(row)
 
+### slide:: p
+# in 1.4, the brackets are deprecated; we can now just select(*cols)
+
+select_stmt = select(user_table.c.username, user_table.c.fullname).where(
+    user_table.c.username == "spongebob"
+)
+print(select_stmt)
+
 ### slide:: lp
 # select all columns from a table
 

@@ -49,9 +49,7 @@ engine = create_engine("sqlite:///some.db")
 # So that we can show off some 2.0 features, we will make a second
 # engine against the same database
 
-from sqlalchemy.future import create_engine as future_create_engine
-
-future_engine = future_create_engine("sqlite:///some.db")
+future_engine = create_engine("sqlite:///some.db", future=True)
 
 
 ### slide::

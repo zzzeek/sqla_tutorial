@@ -279,15 +279,17 @@ for address in (
 # As Query has evolved for years to look more and more like a select(),
 # the next step is that select() and Query() basically merge
 
-from sqlalchemy.future import select as future_select
+from sqlalchemy import select
+
+future_session = Session(bind=engine, future=True)
 
 stmt = (
-    future_select(User, Address.email_address)
+    select(User, Address.email_address)
     .join(User.addresses)
     .order_by(User.username, Address.email_address)
 )
 
-result = session.execute(stmt)
+result = future_session.execute(stmt)
 
 ### slide:: p
 # part of the reason is that people wanted more flexibility in how
@@ -301,8 +303,8 @@ result.scalars().unique().all()
 # additionally, the strange duplication of query.filter() / select.where()
 # is solved by making it all just select.where().
 
-stmt = future_select(User).where(User.username == "spongebob")
-result = session.execute(stmt)
+stmt = select(User).where(User.username == "spongebob")
+result = future_session.execute(stmt)
 
 user = result.scalar()
 
@@ -310,7 +312,7 @@ user = result.scalar()
 # select() also gains features taken from the ORM, that now work in Core,
 # like join() and filter_by().
 
-stmt = future_select(User).filter_by(username="squidward").join(Address)
+stmt = select(User).filter_by(username="squidward").join(Address)
 
 with engine.connect() as connection:
     result = connection.execute(stmt)
@@ -323,7 +325,7 @@ with engine.connect() as connection:
 # including that time spent on the outside of the cache building the
 # object is at a minimum.
 
-session.execute(stmt).scalars().all()
+future_session.execute(stmt).scalars().all()
 
 
 ### slide::

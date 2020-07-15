@@ -69,7 +69,6 @@ with engine.begin() as connection:
 # some new capabilities for 1.4 / 2.0
 
 from sqlalchemy import select
-from sqlalchemy.future import select as future_select
 
 connection = engine.connect()
 
@@ -103,7 +102,7 @@ connection.execute(select_stmt).fetchall()
 # column arguments positionally
 
 
-select_stmt = future_select(
+select_stmt = select(
     user_table.c.username, address_table.c.email_address
 ).join(address_table)
 connection.execute(select_stmt).fetchall()

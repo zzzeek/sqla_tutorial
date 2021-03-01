@@ -1,16 +1,19 @@
-Introduction to SQLAlchemy 2020
+SQLAlchemy 2.0 - The One-Point-Four-Ening 2021
 
-In this tutorial, we present a "from the ground up" tour of SQLAlchemy, what
-the general idea of it is, how it's organized, and what it looks like to use
-it.   This is the latest version of the "classic" SQLAlchemy tutorial  which
-has been presented on many occasions since 2008, reworked for the current
-recommended SQLAlchemy usage patterns with an emphasis on previewing the
-upcoming 1.4 and 2.0 releases of SQLAlchemy, which are poised to make major
-changes to many of SQLAlchemy's central paradigms and capabilities.
+SQLAlchemy enters the "Python 3 only" world with an all-new rethink of it's Core
+and ORM APIs known as SQLAlchemy 2.0.   Right now, SQLAlchemy 2.0 is in
+its transitional "caterpillar to butterfly" state, which is the new
+SQLAlchemy 1.4 series, currently in beta releases.
 
-SQLAlchemy is presented in terms of a four-layered model, which include "Engine
-and Connection Basics", "Table Metadata", "SQL Expression Language", and "ORM
-Usage" which is broken into two sections and API use is presented in terms of a
-console runner application which participants can install locally and follow
-along.   The tutorial will also present some of the newest in-development
-features of SQLAlchemy 1.4 which have only just merged.
+This tutorial will be the premiere of the classic "from the ground up" tutorial
+of SQLAlchemy re-imagined for the new 2.0 way of working, featuring a much
+greater consistency between the "Core" and "ORM" experiences.   There will be
+nary an "engine.execute()" nor a "session.query()" to be found.  New ORM
+configurational patterns are presented a well.
+
+Presented in terms of a four-layered model, which include "Engine and
+Connection Basics", "Table Metadata", "SQL Expression Language", and "ORM
+Usage", the tutorial is broken into two sections and API use is presented in
+terms of a console runner application which participants can install locally
+and follow along.
+

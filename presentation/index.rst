@@ -1,8 +1,8 @@
 .. rst-class:: titleslide
 
-=================================
- Introduction to SQLAlchemy 2020
-=================================
+================================================
+ SQLAlchemy 2.0 - The One-Point-Four-Ening 2021
+================================================
 
 .. image:: sqlalchemy.png
     :height: 4em
@@ -41,9 +41,8 @@ SQLAlchemy - Overview
 * introduced 2005
 * end-to-end system for working with the Python DBAPI, relational databases,
   and the SQL language
-* Current release 1.3.18
-* 1.4 is the next major version, which itself is a transitional version for
-  **SQLAlchemy 2.0**
+* Current release **1.4.0**
+* The 1.4 series is considered to be transitional for **SQLAlchemy 2.0**
 
 
 SQLAlchemy Goals
@@ -109,41 +108,27 @@ SQLAlchemy - ORM
 * Presents a slightly more object centric perspective, as opposed to a schema
   centric perspective.
 
-SQLAlchemy - Other Subsystems
-=============================
+The Shift to 2.0
+================
 
-.. rst-class:: subheader
+* SQLAlchemy 2.0 is an all-new rethink of many of the core APIs of SQLAlchemy
+* There are two general areas of emphasis for SQLAlchemy 2.0
+  * Fully removing old patterns that have been
+    discouraged against for many years
+  * Making the experience of the Core and ORM APIs much more similar and
+    cross-compatible
+* Other major shifts:
+  * Python 3 only
+  * hopefully improved pep-484 / mypy support
+  * asyncio fully supported
 
-Some of which didn't exist when this tutorial was first written !
+SQLAlchemy 1.4 - The Transition
+================================
 
-* ``sqlalchemy.events`` - a sophisticated event registration system which
-  provides user-definable hooks throughout all SQLAlchemy components.
-* ``sqlalchemy.inspect`` - a generalized system that provides a "deeper look"
-  at SQLAlchemy constructs, including a schema inspection system for engines
-  and an object inspector for ORM-persisted objects
-* ``sqlalchemy.ext`` - a series of extensions most (but not all) tailored towards
-  extending ORM functionality.
-* ``sqlalchemy.testing`` - an exported test suite that is used for third party
-  dialect authors to test their dialects for full feature compliance
-* ``sqlalchemy.examples`` - includes an in-depth performance testing suite
-  as over a dozen other recipes and
-  ideas.    Many more are on the Github wiki.
-
-
-
-The Big News:  1.4, 2.0
-========================
-
-* With the standardization of Python 3, SQLAlchemy is on the path to
-  an **all new 2.0 release**.
-* 2.0 includes major new features, a significant streamling of APIs, and
-  removes lots of long-standing patterns that have legacy roots
-* Release 1.4 is a **transitional** release.   All of 2.0's features and
-  usage patterns will be present in 1.4
-* For full 2.0 patterns, a "future mode" is provided that changes Core APIs
-  to work in the new way fully.
-* It will include a deprecation mode that warns for all the patterns that
-  2.0 will remove.
+* SQLAlchemy 1.4 implements the 2.0 architecture and featureset (as planned so far) fully
+* However still provides cross-compatibility with SQLAlchemy 1.3, Python 2 support
+* In this talk, we'll present patterns using SQLAlchemy 1.4, using only the
+  "new" 2.0 style of everything.
 
 1.4 / 2.0 Major Changes
 ===============================
@@ -161,7 +146,7 @@ The Big News:  1.4, 2.0
 * ORM Query is unified with select(); can use select() to get ORM results
 * The Result set is unified between Core and ORM, results in both systems
   come back in the same way
-* asyncio API for Core and ORM is (surprisingly) on track, using a recently
+* asyncio API for Core and ORM is up and running, using a recently
   discovered approach to bridge async/sync APIs
 
 
@@ -232,22 +217,6 @@ Important DBAPI Facts
 * All DBAPIs have significant inconsistencies in how they behave.  It is not
   possible to write non-trivial DBAPI-agnostic code without the use of
   libraries on top of it.
-
-Sample DBAPI Inconsistencies
-=============================
-
-* DBAPIs publish their own exception classes that must be caught explicitly;
-  messages are completely different.
-* SQLite does not fully accommodate datetime objects, they must be stored and
-  retreived as strings.
-* pyodbc with SQL Server will sometimes fail to use a VARCHAR table index
-  because Python strings are Unicode and it passes them as NVARCHAR.
-* psycopg2's ``cursor.executemany()`` call is extremely slow; special
-  extensions must be employed for it to perform acceptably
-* cx_Oracle requires extensive use of ``cursor.setinputsizes()`` to support
-  passing simple datatypes such dates and binary objects.
-* MySQL drivers require a special flag so that ``cursor.rowcount`` works the
-  same as all other DBAPIs
 
 SQLAlchemy and the DBAPI
 =================================

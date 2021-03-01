@@ -39,17 +39,11 @@ with e.begin() as conn:
 ### title:: Engine Basics
 # create_engine() builds a *factory* for database connections.
 # Below we create an engine that will connect to a SQLite database.
+# "future" means we want the full 2.0 behavior.
 
 from sqlalchemy import create_engine
 
-engine = create_engine("sqlite:///some.db")
-
-
-### slide::
-# So that we can show off some 2.0 features, we will make a second
-# engine against the same database
-
-future_engine = create_engine("sqlite:///some.db", future=True)
+engine = create_engine("sqlite:///some.db", future=True)
 
 
 ### slide::
@@ -77,9 +71,9 @@ stmt = text("select emp_id, emp_name from employee where emp_id=:emp_id")
 result = connection.execute(stmt, {"emp_id": 2})
 
 ### slide::
-# the result object we get back is similar to a cursor, and features methods
-# like fetchone(), fetchall()
-row = result.fetchone()
+# the result object we get back is similar to a cursor, with more methods,
+# such as first() which will return the first row and close the result set
+row = result.first()
 
 ### slide:: i
 # the row looks and acts mostly like a named tuple
@@ -88,40 +82,14 @@ row[1]
 row.emp_name
 
 ### slide::
-# it also has a dictionary interface, however this is moving...
-row["emp_name"]
-
-### slide:: i
-# in SQLAlchemy 1.4, the "dictionary" view is available via ._mapping
+# it also has a dictionary interface, which is available via an accessor
+# call .mapping
 row._mapping["emp_name"]
 
 ### slide:: i
 # folks usually use the named tuple interface in any case
 row.emp_name
 
-### slide::
-### title:: our first 1.3 -> 1.4 "future" migration note
-# the dictionary thing is special because it implies the behavior of
-# "contains", e.g. "elem in collection".    In 1.3, "row" acts like a dictionary
-
-row
-row.keys()
-"emp_name" in row
-"sandy" in row
-
-### slide:: i
-# in 1.4 future / 2.0 it acts like a tuple
-with future_engine.connect() as future_conn:
-    row = future_conn.execute(stmt, {"emp_id": 2}).first()
-
-"emp_name" in row
-"sandy" in row
-
-
-### slide::
-# results close automatically when all rows are exhausted, but we can
-# also close explicitly.
-result.close()
 
 ### slide:: p
 # result objects can also be iterated
@@ -131,12 +99,12 @@ for row in result:
     print(row)
 
 ### slide:: p
-# and there are methods like fetchall()
+# and there are methods like all()
 result = connection.execute(text("select * from employee"))
-result.fetchall()
+result.all()
 
 ### slide:: p
-# in 1.4 there are fancier methods too
+# there are also column-selection methods like scalars()
 result = connection.execute(text("select * from employee"))
 result.scalars("emp_name").all()
 
@@ -151,40 +119,30 @@ connection.close()
 # release process
 
 with engine.connect() as connection:
-    connection.execute(text("select * from employee")).all()
+    rpws = connection.execute(text("select * from employee")).all()
 
     # releases connection back to the pool
 
 
 ### slide:: p
-### title:: transactions, committing and autocommit
-# In 1.x SQLAlchemy versions, statements like INSERT statements, even
-# when they are passed as plain strings, are subject to autocommit
-# behavior.
+### title:: transactions, committing
 
-connection = engine.connect()
-connection.execute(
-    text("insert into employee_of_month (emp_name) values (:emp_name)"),
-    {"emp_name": "spongebob"},
-)
+# Unlike previous SQLAlchemy versoins, SQLAlchemy 2.0 has no concept
+# of "library level" autocommit; which means, if the DBAPI driver is in
+# a transaction, SQLAlchemy will never commit it automatically.   The usual
+# way to commit is called "commit as you go"
 
-
-### slide:: p
-# In 2.0, this autocommit is removed.   There is instead a local
-# .commit() method for commit-as-you-go style use.
-
-with future_engine.connect() as future_connection:
-    future_connection.execute(
+with engine.connect() as connection:
+    connection.execute(
         text("insert into employee_of_month (emp_name) values (:emp_name)"),
         {"emp_name": "sandy"},
     )
-    future_connection.commit()
+    connection.commit()
 
 
 ### slide:: p
-# To explicitly demarcate begin/commit, the most idiomatic way is to use the
-# .begin() method of Engine which returns a context manager that yields
-# the connection
+# the other way is called "begin once", when you just have a single transaction
+# to commit
 
 with engine.begin() as connection:
     connection.execute(
@@ -196,30 +154,10 @@ with engine.begin() as connection:
 
 
 ### slide:: p
-# You can also explicitly begin() from the Connection, returning a
-# Transaction object which supports rollback and commit
-
+# You can also use begin() blocks local to the connection
+#
 with engine.connect() as connection:
-    trans = connection.begin()
-    connection.execute(
-        text("insert into employee (emp_name) values (:emp_name)"),
-        {"emp_name": "patrick"},
-    )
-    trans.commit()
-    trans = connection.begin()
-    connection.execute(
-        text("update employee_of_month set emp_name = :emp_name"),
-        {"emp_name": "patrick"},
-    )
-    trans.rollback()  # sorry patrick
-
-### slide:: p
-# The Transaction also supports context manager use which is
-# much easier to use.  rollback is called automatically if an exception
-# is raised
-
-with engine.connect() as connection:
-    with connection.begin() as trans:
+    with connection.begin():
         connection.execute(
             text("update employee_of_month set emp_name = :emp_name"),
             {"emp_name": "squidward"},
@@ -233,7 +171,7 @@ with engine.connect() as connection:
 # SAVEPOINT construct.
 
 with engine.connect() as connection:
-    with connection.begin() as trans:
+    with connection.begin():
         savepoint = connection.begin_nested()
         connection.execute(
             text("update employee_of_month set emp_name = :emp_name"),
@@ -250,6 +188,25 @@ with engine.connect() as connection:
 
         # commits transaction, or rollback if exception
     # closes connection
+
+### slide:: p
+# most DBAPIs support autocommit now, which is why SQLAlchemy no longer
+# does.  To use driver level autocommit, use execution options:
+
+with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
+    connection.execute(
+        text("insert into employee(emp_name) values (:name)"),
+        {"name": "plankton"},
+    )
+
+### slide:: pi
+# the data was autocommitted
+with engine.connect() as connection:
+    planktons_id = connection.execute(
+        text("select emp_id from employee where emp_name=:name"),
+        {"name": "plankton"}
+    ).scalar()
+    print(planktons_id)
 
 ### slide::
 ### title:: Questions?

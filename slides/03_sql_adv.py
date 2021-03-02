@@ -7,7 +7,7 @@ from sqlalchemy import String, Integer
 
 metadata = MetaData()
 user_table = Table(
-    "user",
+    "user_account",
     metadata,
     Column("id", Integer, primary_key=True),
     Column("username", String(50)),
@@ -22,7 +22,7 @@ address_table = Table(
     "address",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("user_id", ForeignKey("user.id"), nullable=False),
+    Column("user_id", ForeignKey("user_account.id"), nullable=False),
     Column("email_address", String(100), nullable=False),
 )
 
@@ -73,109 +73,126 @@ from sqlalchemy import select
 connection = engine.connect()
 
 ### slide::
-# two Table objects can be joined using join()
+# the select() construct will include in the FROM clause all
+# those tables that we mention in the columns clause or WHERE clause.
+# by default, they are separated by a comma.
 #
-# <left>.join(<right>, [<onclause>]).
+stmt = select(user_table.c.username, address_table.c.email_address)
 
-join_obj = user_table.join(
-    address_table, user_table.c.id == address_table.c.user_id
-)
-print(join_obj)
+print(stmt)
+
+
+### slide:: p
+# however, selecting from multiple tables without relating them
+# to each other produces an effect known as the **cartesian product**.
+# SQLAlchemy will usually warn when this is detected during statement
+# execution.
+
+result = connection.execute(stmt)
 
 ### slide:: i
-# ForeignKey allows the join() to figure out the ON clause automatically
-
-join_obj = user_table.join(address_table)
-print(join_obj)
-
-### slide:: p
-# to SELECT from a JOIN, use select_from()
-
-select_stmt = select(
-    [user_table.c.username, address_table.c.email_address]
-).select_from(join_obj)
-connection.execute(select_stmt).fetchall()
+# the cartesian result contains every combination of rows which is redundant
+# and slow to generate for larger datasets
+result.all()
 
 ### slide:: p
-# the new version of select makes this simpler, we can use
-# the .join() method of select.  note also we pass the
-# column arguments positionally
+# So, when we have more than one table mentioned, we want to relate them
+# together, which is most easily achieved using join_from():
 
+stmt = select(
+    user_table.c.username, address_table.c.email_address
+).join_from(user_table, address_table)
 
-select_stmt = select(
+connection.execute(stmt).all()
+
+### slide:: p
+# there is also .join(), which will infer the left hand side automatically
+
+stmt = select(
     user_table.c.username, address_table.c.email_address
 ).join(address_table)
-connection.execute(select_stmt).fetchall()
+
+connection.execute(stmt).all()
 
 ### slide:: p
-# in order to refer to the same table mutiple times in the FROM clause,
-# the .alias() construct will create an alias of a table.
+# the ON clause of the JOIN is also inferred automatically from the
+# foreign key relationships of the involved tables.   We may choose
+# to express this join condition explicitly, as would be needed if the
+# join condition were otherwise ambiguous
+
+stmt = select(
+    user_table.c.username, address_table.c.email_address
+).join(address_table, user_table.c.id == address_table.c.user_id)
+
+connection.execute(stmt).all()
+
+### slide:: p
+# When a SELECT wants to refer to the same table more than once, a SQL
+# alias is used.  This is available using the  .alias() method, which
+# returns a unique Alias object representing that table with a particular
+# SQL alias.
 address_alias_1 = address_table.alias()
 address_alias_2 = address_table.alias()
 
 select_stmt = (
     select(
-        [
             user_table.c.username,
             address_alias_1.c.email_address,
             address_alias_2.c.email_address,
-        ]
     )
-    .select_from(user_table.join(address_alias_1).join(address_alias_2))
+    .join_from(user_table, address_alias_1).join(address_alias_2)
     .where(address_alias_1.c.email_address == "spongebob@spongebob.com")
     .where(address_alias_2.c.email_address == "spongebob@gmail.com")
 )
 
-connection.execute(select_stmt).fetchall()
+connection.execute(select_stmt).all()
 
 ### slide::
 # A subquery is used much like a table alias, except we start with a select
-# statement.   We call the .alias(), or .subquery() method
-# of select()  (1.3 only has .alias())
+# statement.   We call the .subquery() method of select()
 
 select_subq = (
-    select([user_table.c.username, address_table.c.email_address])
-    .select_from(user_table.join(address_table))
-    .alias()
+    select(user_table.c.username, address_table.c.email_address)
+    .join(address_table).subquery()
 )
 
 ### slide:: pi
 # the subquery object itself has a .c attribute, and is used just like
 # a table.
 
-stmt = select([select_subq.c.username]).where(
+stmt = select(select_subq.c.username).where(
     select_subq.c.username == "spongebob"
 )
 print(stmt)
 
 ### slide::
-# With subquery and join we can compose more elaborate statements.  This
+# With subqueries and joins we can compose more elaborate statements.  This
 # subquery introduces the "func" and "group by" concepts
 
 from sqlalchemy import func
 
 address_select = select(
-    [address_table.c.user_id, func.count(address_table.c.id).label("count")]
+    address_table.c.user_id, func.count(address_table.c.id).label("count")
 ).group_by(address_table.c.user_id)
 
-address_subq = address_select.alias()
+address_subq = address_select.subquery()
 
 ### slide:: pi
-# we use join() to link the alias() with another select()
+# we use join() to link the subquery() with another select()
 
 username_plus_count = (
-    select([user_table.c.username, address_subq.c.count])
-    .select_from(user_table.join(address_subq))
+    select(user_table.c.username, address_subq.c.count)
+    .join(address_subq)
     .order_by(user_table.c.username)
 )
 
-connection.execute(username_plus_count).fetchall()
+connection.execute(username_plus_count).all()
 
 
 ### slide::
 # joining to a subquery can also be achieved using a common table
 # expression, or CTE. By calling
-# cte() instead of alias(), we get a CTE:
+# cte() instead of subquery(), we get a CTE:
 
 address_cte = address_select.cte()
 
@@ -183,25 +200,25 @@ address_cte = address_select.cte()
 # we select/join to the CTE in exactly the same way as we did the subquery.
 
 username_plus_count = (
-    select([user_table.c.username, address_cte.c.count])
-    .select_from(user_table.join(address_cte))
+    select(user_table.c.username, address_cte.c.count)
+    .join(address_cte)
     .order_by(user_table.c.username)
 )
 
 ### slide:: i
 
-connection.execute(username_plus_count).fetchall()
+connection.execute(username_plus_count).all()
 
 ### slide::
 ### title:: Correlated subqueries
 # a *scalar subquery* returns exactly one row and one column.
-# we indicate this intent using the as_scalar() or scalar_subquery() method
-# after construction (1.3 only has as_scalar() :)  )
+# we indicate this intent using the scalar_subquery() method
+# after construction
 
 address_corr = (
-    select([func.count(address_table.c.id)])
+    select(func.count(address_table.c.id))
     .where(user_table.c.id == address_table.c.user_id)
-    .as_scalar()
+    .scalar_subquery()
 )
 
 ### slide:: i
@@ -214,7 +231,7 @@ print(address_corr)
 # SQL expression, omitting a FROM that is found in the immediate
 # enclosing SELECT.
 
-select_stmt = select([user_table.c.username, address_corr])
+select_stmt = select(user_table.c.username, address_corr)
 print(select_stmt)
 
 

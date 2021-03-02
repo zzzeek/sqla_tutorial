@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 metadata = MetaData()
 user_table = Table(
-    "user",
+    "user_account",
     metadata,
     Column("id", Integer, primary_key=True),
     Column("username", String(50)),
@@ -113,7 +113,7 @@ user_table.c.username.in_(["sandy", "squidward", "spongebob"]).compile().params
 # in 1.4 when an empty list is rendered
 
 with engine.connect() as connection:
-    connection.execute(select([user_table.c.username.in_([])]))
+    connection.execute(select(user_table.c.username.in_([])))
 
 
 ### slide:: l
@@ -168,7 +168,7 @@ with engine.begin() as connection:
 
 from sqlalchemy import select
 
-select_stmt = select([user_table.c.username, user_table.c.fullname]).where(
+select_stmt = select(user_table.c.username, user_table.c.fullname).where(
     user_table.c.username == "spongebob"
 )
 connection = engine.connect()
@@ -177,30 +177,22 @@ result = connection.execute(select_stmt)
 for row in result:
     print(row)
 
-### slide:: p
-# in 1.4, the brackets are deprecated; we can now just select(*cols)
-
-select_stmt = select(user_table.c.username, user_table.c.fullname).where(
-    user_table.c.username == "spongebob"
-)
-print(select_stmt)
-
 ### slide:: lp
 # select all columns from a table
 
-select_stmt = select([user_table])
-connection.execute(select_stmt).fetchall()
+select_stmt = select(user_table)
+connection.execute(select_stmt).all()
 
 ### slide:: lp
 # specify WHERE and ORDER BY
 
-select_stmt = select([user_table]).where(
+select_stmt = select(user_table).where(
     or_(
         user_table.c.username == "spongebob",
         user_table.c.username == "sandy",
     )
 ).order_by(user_table.c.username)
-connection.execute(select_stmt).fetchall()
+connection.execute(select_stmt).all()
 
 ### slide:: lp
 # specify multiple WHERE, will be joined by AND
@@ -211,7 +203,7 @@ select_stmt = (
     .where(user_table.c.fullname == "Spongebob Squarepants")
     .order_by(user_table.c.username)
 )
-connection.execute(select_stmt).fetchall()
+connection.execute(select_stmt).all()
 
 
 ### slide:: p

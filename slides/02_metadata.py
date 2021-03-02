@@ -10,7 +10,7 @@ from sqlalchemy import select
 
 metadata = MetaData()
 user_table = Table(
-    "user",
+    "user_account",
     metadata,
     Column("id", Integer, primary_key=True),
     Column("username", String(50), nullable=False),
@@ -48,7 +48,7 @@ user_table.primary_key
 ### slide::
 # The Table object is at the core of the SQL expression
 # system - this is a quick preview of that.
-print(select([user_table]))
+print(select(user_table))
 
 ### slide:: p
 # Table and MetaData objects can be used to generate a schema
@@ -94,7 +94,7 @@ metadata.tables['user']
 from sqlalchemy import ForeignKey
 
 addresses_table = Table(
-    "address",
+    "email_address",
     metadata,
     Column("id", Integer, primary_key=True),
     Column("email_address", String(100), nullable=False),
@@ -155,7 +155,7 @@ with engine.connect() as conn:
 
 print(user_reflected.c)
 print(user_reflected.primary_key)
-print(select([user_reflected]))
+print(select(user_reflected))
 
 ### slide::
 # Information about a database at a more specific level is available
@@ -200,7 +200,7 @@ published
 ### slide:: i
 # ready to use
 
-print(select([story]).select_from(story.join(published)))
+print(select(story).join(published)
 
 ### slide::
 ### title:: Questions?

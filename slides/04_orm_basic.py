@@ -1,19 +1,25 @@
 ### slide::
 ### title:: Object Relational Mapping
-# The *declarative* system is the primary system used to configure
-# object relational mappings.
+# SQLAlchemy mappings in 1.4 / 2.0 start with a central object
+# known as the *registry*
 
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import registry
 
-Base = declarative_base()
+
+reg = registry()
 
 ### slide::
-# a basic mapping.  __repr__() is optional.
+# Using the registry, we can map classes in various ways, below illustrated
+# using its "mapped" decorator.
+# In this form, we arrange class attributes in terms of Column objects
+# to be mapped to a Table, which is named based on an attribute
+# "__tablename__"
 
 from sqlalchemy import Column, Integer, String
 
 
-class User(Base):
+@reg.mapped
+class User:
     __tablename__ = "user_account"
 
     id = Column(Integer, primary_key=True)
@@ -57,14 +63,14 @@ spongebob.__dict__
 
 
 ### slide:: p
-# Using our Base, we can create a database schema for this class using
-# a MetaData object that is part of the Base.
+# Using our registry, we can create a database schema for this class using
+# a MetaData object that is part of the registry.
 
 from sqlalchemy import create_engine
 
 engine = create_engine("sqlite://")
 with engine.begin() as connection:
-    Base.metadata.create_all(connection)
+    registry.metadata.create_all(connection)
 
 ### slide::
 # To persist and load User objects from the database, we
@@ -88,12 +94,18 @@ session.new
 
 
 ### slide:: p
-# We can now query for this **pending** row, using an ORM query. the way
+# We can now query for this **pending** row, by emitting a SELECT statement
+# that will refer to "User" entities.   The way
 # this will work is the ORM will first **flush** pending changes to the
-# database, then emit a SELECT.  The ORM Query object is much like the
-# select(), but also can deliver results directly.
+# database, then emit the SELECT.  In SQLAlchemy 1.4/2.0, the same Core
+# select() statement can deliver ORM results to us if we use
+# session.execute(), rather than connection.execute().
 
-also_spongebob = session.query(User).filter_by(username="spongebob").first()
+from sqlalchemy import select
+
+select_statement = select(User).filter_by(username="spongebob")
+result = session.execute(select_statement)
+also_spongebob = result.scalar()
 also_spongebob
 
 ### slide::
@@ -163,7 +175,10 @@ session.add(fake_user)
 ### slide:: p
 # run a query, our changes are flushed; results come back.
 
-session.query(User).filter(User.username.in_(["Spongy", "fakeuser"])).all()
+result = session.execute(
+    select(User).where(User.username.in_(["Spongy", "fakeuser"]))
+)
+result.all()
 
 ### slide::
 # But we're inside of a transaction.  Roll it back.
@@ -181,7 +196,10 @@ fake_user in session
 ### slide:: pi
 # and the data is gone from the database too.
 
-session.query(User).filter(User.username.in_(["spongebob", "fakeuser"])).all()
+result = session.execute(
+    select(User).where(User.username.in_(["spongebob", "fakeuser"]))
+)
+result.all()
 
 
 ### slide::
@@ -193,84 +211,98 @@ print(User.username == "spongebob")
 
 
 ### slide::
-# Within the ORM, we historically use these expressions with the
-# Query object, which is very similar to select(), but adds ORM-specific
-# functionalities in terms of how it interprets what is passed.   Here,
-# an *entity*, rather than a plain Table or Column object, is passed.
+# When ORM-specific expressions are used with select(), the Select construct
+# itself takes on ORM-enabled features, the most basic of which is that
+# it can discern between selecting from *columns* vs *entities*.  Below,
+# the SELECT is to return rows that contain a single element, which would
+# be an instance of User.   This is translated from the actual SELECT
+# sent to the database that SELECTs for the individual columns of the
+# User entity.
 
 query = (
-    session.query(User).filter(User.username == "spongebob").order_by(User.id)
+    select(User).where(User.username == "spongebob").order_by(User.id)
 )
 
 ### slide:: ip
-# The ORM Query then returns actual User objects.  in this case,
-# it returns them directly and not as a "row".  When Query was first
-# implemented years ago, this is all it could do.
-query.all()
+# the rows we get back from Session.execute() then contain User objects
+# as the first element in each row.
+result = session.execute(query)
+
+for row in result:
+    print(row)
 
 
 ### slide:: p
-# Later, Query was enhanced to also be able to return rows of individual
-# columns...
-for username, fullname in session.query(User.username, User.fullname):
-    print(username, fullname)
+# As it is typically convenient for rows that only have a single element
+# to be delivered as the element alone, we can use the .scalars() method
+# of Result as we did earlier to return just the first column of each row
+
+result = session.execute(query)
+for user_obj in result.scalars():
+    print(user_obj)
+
+### slide:: p
+# The Result we get back from Session.execute() shares a common base with
+# the same Result that we got back when using connection.execute(), so
+# the same methods are available such as one(), one_or_none(), first(),
+# etc.   Modifiers such as .scalars() and .columns() may also be applied
+# first before receiving results:
+
+result = session.execute(query)
+
+user_obj = result.scalars().one()
+print(user_obj)
+
+### slide:: pi
+# there is also .scalar_one() to mix both scalar() and one() with a single
+# method:
+
+result = session.execute(query)
+
+user_obj = result.scalar_one()
+print(user_obj)
+
+
+### slide:: p
+# An ORM query can make use of any combination of columns and entities.
+# to request the fields of User separately, we name them separately in the
+# columns clause
+
+query = select(User.username, User.fullname)
+result = session.execute(query)
+for row in result:
+    print(f"{row.username} {row.fullname}")
 
 ### slide:: p
 # as well as combinations of "entities" and columns
-for row in session.query(User, User.username):
-    print(row.User, row.username)
+query = select(User, User.username)
+result = session.execute(query)
+for row in result:
+    print(f"{row.username} {row.fullname}")
 
 ### slide:: p
 # the WHERE clause is either by filter_by(), which is convenient
 
-for (username,) in session.query(User.username).filter_by(
-    fullname="Spongebob Jones"
+for (username, ) in session.execute(
+    select(User.username).filter_by(
+        fullname="Spongebob Jones"
+    )
 ):
     print(username)
 
 ### slide:: p
-# or filter(), which works just like select().where().
+# or where(), which is also available as filter() for cross-compatibility
 
 from sqlalchemy import or_
 
-for user in (
-    session.query(User)
-    .filter(User.username == "spongebob")
-    .filter(or_(User.fullname == "Spongebob Jones", User.id < 5))
+for (user, ) in (
+    session.execute(
+        select(User)
+        .where(User.username == "spongebob")
+        .where(or_(User.fullname == "Spongebob Jones", User.id < 5))
+    )
 ):
     print(user)
-
-### slide::
-# Query has some variety for returning results
-
-query = session.query(User).filter_by(fullname="Spongebob Jones")
-
-### slide:: pi
-# all() returns a list
-
-query.all()
-
-### slide:: pi
-# first() returns the first row, or None
-
-query.first()
-
-### slide:: pi
-# one() returns the first row and verifies that there's one and only one
-
-query.one()
-
-### slide:: p
-# if there's not one(), you get an error
-
-query = session.query(User).filter_by(fullname="nonexistent")
-query.one()
-
-### slide:: p
-# if there's more than one(), you get an error
-
-query = session.query(User)
-query.one()
 
 ### slide::
 ### title:: Questions?

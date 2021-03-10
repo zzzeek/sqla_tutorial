@@ -4,13 +4,14 @@
 # give it a one-to-many **relationship** to a second entity.
 
 from sqlalchemy import Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import registry
 from sqlalchemy.orm import relationship
 
-Base = declarative_base()
+reg = registry()
 
 
-class User(Base):
+@reg.mapped
+class User:
     __tablename__ = "user_account"
 
     id = Column(Integer, primary_key=True)
@@ -30,7 +31,8 @@ class User(Base):
 from sqlalchemy import ForeignKey
 
 
-class Address(Base):
+@reg.mapped
+class Address:
     __tablename__ = "address"
 
     id = Column(Integer, primary_key=True)
@@ -50,7 +52,7 @@ from sqlalchemy import create_engine
 
 engine = create_engine("sqlite://")
 with engine.connect() as connection:
-    Base.metadata.create_all(connection)
+    reg.metadata.create_all(connection)
 
 ### slide:: p
 # Insert data into the User table...
@@ -119,7 +121,11 @@ squidward.addresses
 # collections and references are updated by manipulating objects themselves;
 # setting up of foreign key column values is handled automatically.
 
-spongebob = session.query(User).filter_by(username="spongebob").one()
+from sqlalchemy import select
+
+spongebob = session.execute(
+    select(User).filter_by(username="spongebob")
+).scalar_one()
 spongebob.addresses
 squidward.addresses[1].user = spongebob
 

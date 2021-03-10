@@ -95,44 +95,26 @@ print(user_table.c.id + 5)
 print(user_table.c.fullname + " Jr.")
 
 ### slide::
-# an IN.  this has undergone a lot of changes in recent releases, and here
-# we see a relatively new kind of parameter called "postcompile" which
-# is resolved before being passed to the DBAPI driver.  this is how all IN
-# works in 1.4
-
-print(user_table.c.username.in_(["sandy", "squidward", "spongebob"]))
-
-### slide:: i
-# with the "postcompile" parameter (available as "expanding" in 1.3),
-# the set of values are stored as a single list parameter
-user_table.c.username.in_(["sandy", "squidward", "spongebob"]).compile().params
-
-
-### slide:: p
-# as of 1.3, "empty sets" for IN are available, and this is on by default
-# in 1.4 when an empty list is rendered
+# the IN operator will dynamically calculate bound parameter holders
+# at compile time.
 
 with engine.connect() as connection:
-    connection.execute(select(user_table.c.username.in_([])))
+    connection.execute(
+        select(
+            user_table.c.username.in_(["sandy", "squidward", "spongebob"])
+        )
+    ).all()
 
+### slide:: p
+# "empty sets" for IN are available as well, which makes use of special
+# subqueries to provide a server-side "empty set"
 
-### slide:: l
-# Expressions produce different strings according to *dialect*
-# objects.
-
-expression = user_table.c.fullname + " Jr."
-
-### slide:: i
-# PostgreSQL...
-from sqlalchemy.dialects import postgresql
-
-print(expression.compile(dialect=postgresql.dialect()))
-
-### slide:: i
-# MySQL....
-from sqlalchemy.dialects import mysql
-
-print(expression.compile(dialect=mysql.dialect()))
+with engine.connect() as connection:
+    connection.execute(
+        select(
+            user_table.c.username.in_([])
+        )
+    ).all()
 
 
 ### slide:: p
@@ -198,12 +180,62 @@ connection.execute(select_stmt).all()
 # specify multiple WHERE, will be joined by AND
 
 select_stmt = (
-    select([user_table])
+    select(user_table)
     .where(user_table.c.username == "spongebob")
     .where(user_table.c.fullname == "Spongebob Squarepants")
     .order_by(user_table.c.username)
 )
 connection.execute(select_stmt).all()
+
+
+### slide:: p
+# More Result methods.   In the engine chapter, we were introduced to
+# .all(), .first(), and .scalars().   Result also has most of what
+# previously was only in the ORM, such as the .one() and .one_or_none()
+# methods.
+
+# the one() method returns exactly one row
+result = connection.execute(
+    select(user_table.c.fullname).where(user_table.c.username == 'spongebob')
+)
+result.one()
+
+### slide:: pi
+# if there are no rows, or many rows, it raises an error.
+result = connection.execute(
+    select(user_table.c.fullname).order_by(user_table.c.username)
+)
+result.one()
+
+### slide:: pi
+# one_or_none() will only raise if there are more than one row, but
+# returns None for no result
+result = connection.execute(
+    select(user_table).where(user_table.c.username == 'nonexistent')
+)
+result.one_or_none()
+
+### slide:: p
+# result objects now support slicing at the result level.   We can SELECT
+# some rows, and change the ordering and/or presence of columns after the
+# fact using the .columns() method:
+
+result = connection.execute(
+    select(user_table).order_by(user_table.c.username)
+)
+for fullname, username in result.columns("fullname", "username"):
+    print(f"{fullname} {username}")
+
+### slide:: p
+# a single column from the results can be delivered without using
+# rows by applying the .scalars() modifier.   This accepts an optional
+# column name, or otherwise assumes the first column:
+
+result = connection.execute(
+    select(user_table).order_by(user_table.c.username)
+)
+for fullname in result.scalars("fullname"):
+    print(fullname)
 
 
 ### slide:: p

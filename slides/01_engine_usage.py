@@ -99,14 +99,10 @@ for row in result:
     print(row)
 
 ### slide:: p
-# and there are methods like all()
+# and there are methods like all().   More methods will be discussed
+# later.
 result = connection.execute(text("select * from employee"))
 result.all()
-
-### slide:: p
-# there are also column-selection methods like scalars()
-result = connection.execute(text("select * from employee"))
-result.scalars("emp_name").all()
 
 ### slide::
 # Connection has a .close() method.  This **releases** the
@@ -119,7 +115,7 @@ connection.close()
 # release process
 
 with engine.connect() as connection:
-    rpws = connection.execute(text("select * from employee")).all()
+    rows = connection.execute(text("select * from employee")).all()
 
     # releases connection back to the pool
 

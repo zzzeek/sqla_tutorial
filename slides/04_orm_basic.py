@@ -80,7 +80,7 @@ with engine.begin() as connection:
 
 from sqlalchemy.orm import Session
 
-session = Session(bind=engine)
+session = Session(bind=engine, future=True)
 
 ### slide::
 # new objects are placed into the Session using add().

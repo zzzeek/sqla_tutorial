@@ -59,7 +59,7 @@ with engine.connect() as connection:
 
 from sqlalchemy.orm import Session
 
-session = Session(bind=engine)
+session = Session(bind=engine, future=True)
 
 session.add_all(
     [
@@ -145,31 +145,39 @@ session.commit()
 
 ### slide:: p
 ### title:: Querying with multiple tables
-# Query can select from multiple tables at once. Below selects from
-# two different entities.  Results are returned as rows with two
-# "columns", a User and an Address.
+# a SELECT statement can select from multiple entities simultaneously.
 
-for row in session.query(User, Address).filter(User.id == Address.user_id):
+stmt = select(User, Address).where(User.id == Address.user_id)
+
+for row in session.execute(stmt):
     print(row)
 
 ### slide:: p
-# ORM query creates joins usually using the .join() method.  Like the Core
-# join() methods, it can figure out the ON clause for simple cases
+# As is the same case in Core, we use the select().join() method
+# to create joins.   An entity can be given as the target which will
+# join along foreign keys.
 
-session.query(User, Address).join(Address).all()
+stmt = select(User, Address).join(Address)
+session.execute(stmt).all()
 
 
 ### slide:: pi
 # or you can give it an explicit SQL expression for the ON clause
-session.query(User, Address).join(Address, User.id == Address.user_id).all()
+
+stmt = select(User, Address).join(Address, User.id == Address.user_id)
+
+session.execute(stmt).all()
 
 ### slide:: p
 # however the most accurate and succinct way is to use the relationship-bound
 # attribute.
 
-session.query(User.username).join(User.addresses).filter(
+stmt = select(User, Address).join(User.addresses).filter(
     Address.email_address == "squidward@gmail.com"
-).first()
+
+)
+
+session.execute(stmt).first()
 
 ### slide:: p
 # the ORM version of table.alias() is to use the aliased() function
@@ -178,19 +186,24 @@ session.query(User.username).join(User.addresses).filter(
 from sqlalchemy.orm import aliased
 
 a1, a2 = aliased(Address), aliased(Address)
-session.query(User).join(a1).join(a2).filter(
+
+stmt = select(User).join(a1).join(a2).where(
     a1.email_address == "squidward@gmail.com"
-).filter(a2.email_address == "squidward@hotmail.com").all()
+).where(a2.email_address == "squidward@hotmail.com")
+
+session.execute(stmt).all()
 
 ### slide:: p
 # to join() to an aliased() object with more specificity, a form such
 # as "Class.relationship.of_type(aliased)" may be used
 
-session.query(User).join(User.addresses.of_type(a1)).join(
+stmt = select(User).join(User.addresses.of_type(a1)).join(
     User.addresses.of_type(a2)
-).filter(a1.email_address == "squidward@gmail.com").filter(
+).where(a1.email_address == "squidward@gmail.com").where(
     a2.email_address == "squidward@hotmail.com"
-).all()
+)
+
+session.execute(stmt).all()
 
 ### slide:: p
 # We can also join with subqueries.  subquery() returns
@@ -200,14 +213,15 @@ session.query(User).join(User.addresses.of_type(a1)).join(
 from sqlalchemy import func
 
 subq = (
-    session.query(func.count(Address.id).label("count"), Address.user_id)
+    select(func.count(Address.id).label("count"), Address.user_id)
     .group_by(Address.user_id)
     .subquery()
 )
 
-session.query(User.username, func.coalesce(subq.c.count, 0)).outerjoin(
+stmt = select(User.username, func.coalesce(subq.c.count, 0)).outerjoin(
     subq, User.id == subq.c.user_id
-).all()
+)
+session.execute(stmt).all()
 
 ### slide::
 # Questions before the next section?
@@ -218,7 +232,9 @@ session.query(User.username, func.coalesce(subq.c.count, 0)).outerjoin(
 # statements emitted when loading collections against a parent result.
 # As SQLAlchemy is a full featured ORM, we of course include this! :)
 
-for user in session.query(User):
+for user in session.execute(
+    select(User)
+).scalars():
     print(user, user.addresses)
 
 ### slide:: p
@@ -231,7 +247,9 @@ session.rollback()  # so we can see the load happen again.
 
 from sqlalchemy.orm import selectinload
 
-for user in session.query(User).options(selectinload(User.addresses)):
+for user in session.execute(
+    select(User).options(selectinload(User.addresses))
+).scalars():
     print(user, user.addresses)
 
 ### slide:: p
@@ -244,9 +262,12 @@ session.rollback()
 
 from sqlalchemy.orm import joinedload
 
-for address_obj in session.query(Address).options(
-    joinedload(Address.user, innerjoin=True)
-):
+for address_obj in session.execute(
+    select(Address).
+    options(
+        joinedload(Address.user, innerjoin=True)
+    )
+).scalars():
     print(address_obj.email_address, address_obj.user.username)
 
 ### slide:: p
@@ -255,12 +276,12 @@ for address_obj in session.query(Address).options(
 # only how related collections are loaded.   An explicit join()
 # can be mixed with the joinedload() and they are kept separate
 
-for address in (
-    session.query(Address)
+for address in session.execute(
+    select(Address)
     .join(Address.user)
-    .filter(User.username == "squidward")
+    .where(User.username == "squidward")
     .options(joinedload(Address.user))
-):
+).scalars():
     print(address, address.user)
 
 ### slide:: p
@@ -269,69 +290,14 @@ for address in (
 
 from sqlalchemy.orm import contains_eager
 
-for address in (
-    session.query(Address)
+for address in session.execute(
+    select(Address)
     .join(Address.user)
-    .filter(User.username == "squidward")
+    .where(User.username == "squidward")
     .options(contains_eager(Address.user))
-):
+).scalars():
     print(address, address.user)
 
-### slide::
-# Questions before the next section?
-
-### slide:: p
-### title:: What's new in 1.4 / 2.0 ?
-# As Query has evolved for years to look more and more like a select(),
-# the next step is that select() and Query() basically merge
-
-from sqlalchemy import select
-
-future_session = Session(bind=engine, future=True)
-
-stmt = (
-    select(User, Address.email_address)
-    .join(User.addresses)
-    .order_by(User.username, Address.email_address)
-)
-
-result = future_session.execute(stmt)
-
-### slide:: p
-# part of the reason is that people wanted more flexibility in how
-# Query returns results.   so now the full Result object is returned, which
-# allows for a method chained approach to customize how results are
-# returned.
-
-result.scalars().unique().all()
-
-### slide:: p
-# additionally, the strange duplication of query.filter() / select.where()
-# is solved by making it all just select.where().
-
-stmt = select(User).where(User.username == "spongebob")
-result = future_session.execute(stmt)
-
-user = result.scalar()
-
-### slide:: p
-# select() also gains features taken from the ORM, that now work in Core,
-# like join() and filter_by().
-
-stmt = select(User).filter_by(username="squidward").join(Address)
-
-with engine.connect() as connection:
-    result = connection.execute(stmt)
-    result.all()
-
-
-### slide:: pi
-# the unification also rearranges things on the inside and is actually
-# part of how ORM Query, select() and everything else are now cachable,
-# including that time spent on the outside of the cache building the
-# object is at a minimum.
-
-future_session.execute(stmt).scalars().all()
 
 
 ### slide::

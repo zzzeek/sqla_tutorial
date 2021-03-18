@@ -24,6 +24,7 @@ body {
   margin: 0;
   padding: 0;
 
+
   display: block !important;
 
   height: 100%;
@@ -426,7 +427,10 @@ h2 {
 
   padding: 0;
   margin: 0;
-  padding: 0 40px 10px 0;
+
+  /* 20px on top is to make room for zoom control panel that shows up as
+  a black box for viewers */
+  padding: 20px 40px 10px 0;
 
   font-weight: 600;
 

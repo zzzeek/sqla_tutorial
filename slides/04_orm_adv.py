@@ -37,7 +37,7 @@ class Address:
 
     id = Column(Integer, primary_key=True)
     email_address = Column(String, nullable=False)
-    user_id = Column(ForeignKey("user.id"), nullable=False)
+    user_id = Column(ForeignKey("user_account.id"), nullable=False)
 
     user = relationship("User", back_populates="addresses")
 
@@ -76,12 +76,6 @@ session.commit()
 squidward = User(username="squidward", fullname="Squidward Tentacles")
 squidward.addresses
 
-
-### slide:: i
-# New in 1.4, in the same way that column attributes are not part of the
-# object's state by accessing it, neither are collections, until they are
-# mutated.
-squidward.__dict__
 
 ### slide::
 # populate this collection with new Address objects.

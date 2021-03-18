@@ -297,8 +297,6 @@ CREATE and DROP
   for all tables.
 * ``table.drop(connection, checkfirst=<True| False>)`` emits DROP for a single
   table.
-* It's a bit up in the air if these methods will continue to accept an
-  ``Engine`` object directly or if a ``Connection`` is required.
 
 
 Level 3, Core SQL Expression Language
@@ -417,12 +415,14 @@ Flavors of ORM
 The Data Mapper approach tries to keep the details of persistence separate from
 the object being persisted::
 
-    dbsession = Session()
-    user_record = User(name="ed", fullname="Ed Jones")
-    dbsession.add(user_record)
-    user_record = dbsession.query(User).filter(name='ed').first()
-    user_record.fullname = "Edward Jones"
-    dbsession.commit()
+    with Session(engine) as session:
+      user_record = User(name="ed", fullname="Ed Jones")
+      session.add(user_record)
+      user_record = session.execute(
+          select(User).where(User.name == 'squidward')
+      ).scalars().first()
+      user_record.fullname = "Edward Jones"
+      session.commit()
 
 
 Flavors of ORM
@@ -461,7 +461,7 @@ separate.
             self.username = username
 
     # elsewhere, it's associated with a database table
-    mapper(
+    registry.mapper(
         User,
         Table(
           "user",
@@ -515,5 +515,5 @@ Thanks !
 
 .. rst-class:: bottom
 
-http://www.sqlalchemy.org
+https://www.sqlalchemy.org
 @zzzeek

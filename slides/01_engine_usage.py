@@ -83,36 +83,33 @@ row.emp_name
 
 ### slide::
 # it also has a dictionary interface, which is available via an accessor
-# call .mapping
+# call ._mapping
 row._mapping["emp_name"]
 
-### slide:: i
-# folks usually use the named tuple interface in any case
-row.emp_name
-
-
 ### slide:: p
-# result objects can also be iterated
+# result objects can also be iterated and tuple assignment can be
+# used for rows as well
 
 result = connection.execute(text("select * from employee"))
-for row in result:
-    print(row)
+for emp_id, emp_name in result:
+    print(f"employee id: {emp_id}   employee name: {emp_name}")
 
-### slide:: p
-# and there are methods like all().   More methods will be discussed
+### slide:: pi
+# there's also other methods like all().   More methods will be discussed
 # later.
 result = connection.execute(text("select * from employee"))
 result.all()
 
 ### slide::
 # Connection has a .close() method.  This **releases** the
-# DBAPI connection back to the connection pool.  This may or
-# may not actually close the DBAPI connection.
+# DBAPI connection back to the connection pool.  This typically
+# does not actually close the DBAPI connection unless the pool is
+# in overflow mode.
 connection.close()
 
 ### slide::
-# however it is preferred to use context managers to manage the connect/
-# release process
+# the connect/release process in modern Python is preferred to be
+# via context managers
 
 with engine.connect() as connection:
     rows = connection.execute(text("select * from employee")).all()
@@ -123,7 +120,7 @@ with engine.connect() as connection:
 ### slide:: p
 ### title:: transactions, committing
 
-# Unlike previous SQLAlchemy versoins, SQLAlchemy 2.0 has no concept
+# Unlike previous SQLAlchemy versions, SQLAlchemy 2.0 has no concept
 # of "library level" autocommit; which means, if the DBAPI driver is in
 # a transaction, SQLAlchemy will never commit it automatically.   The usual
 # way to commit is called "commit as you go"

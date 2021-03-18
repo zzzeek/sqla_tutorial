@@ -1,7 +1,7 @@
 .. rst-class:: titleslide
 
 ================================================
- SQLAlchemy 2.0 - The One-Point-Four-Ening 2021
+ 2.0 - The One-Point-Four-Ening 2021
 ================================================
 
 .. image:: sqlalchemy.png
@@ -41,7 +41,7 @@ SQLAlchemy - Overview
 * introduced 2005
 * end-to-end system for working with the Python DBAPI, relational databases,
   and the SQL language
-* Current release **1.4.0**
+* Current release **1.4.1**
 * The 1.4 series is considered to be transitional for **SQLAlchemy 2.0**
 
 
@@ -112,15 +112,14 @@ The Shift to 2.0
 ================
 
 * SQLAlchemy 2.0 is an all-new rethink of many of the core APIs of SQLAlchemy
-* There are two general areas of emphasis for SQLAlchemy 2.0
-  * Fully removing old patterns that have been
-    discouraged against for many years
-  * Making the experience of the Core and ORM APIs much more similar and
-    cross-compatible
-* Other major shifts:
-  * Python 3 only
-  * hopefully improved pep-484 / mypy support
-  * asyncio fully supported
+* There are two general areas of emphasis for SQLAlchemy 2.0:
+    * Fully removing old patterns that have been discouraged against for many years
+    * Making the experience of the Core and ORM APIs much more similar and
+      cross-compatible
+* Other changes:
+    * Python 3 only
+    * asyncio fully supported (this is in 1.4)
+    * hopefully improved pep-484 / mypy support (also released in 1.4)
 
 SQLAlchemy 1.4 - The Transition
 ================================

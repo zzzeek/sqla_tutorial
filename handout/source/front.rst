@@ -6,7 +6,7 @@ Purpose of this Document
 ========================
 
 This is a handout of supporting information for the
-"Introduction to SQLAlchemy 2020" tutorial.
+"Introduction to SQLAlchemy" tutorial.
 
 Included here are a review section on relational databases, a glossary
 of terms, and a reading list.

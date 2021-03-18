@@ -21,10 +21,14 @@
 
 
 
-Prerequisite Knowledge
+Starting Out
 =================================
 
-* This tutorial assumes some basic knowledge about SQL (in order of
+* SQLAlchemy is all about building Python structures that represent SQL database
+  concepts in a very direct way.
+* It's essential to know at least a little bit of SQL when starting (or you
+  will write angry tweets at me!)
+* This tutorial will assume basic knowledge of (in order of
   importance):
 
     * structure: tables, columns, CREATE TABLE, etc.
@@ -34,25 +38,14 @@ Prerequisite Knowledge
     * joins, grouping
 
 
-SQLAlchemy - Overview
+Presenting SQLAlchemy
 =================================
 
-* the Database Toolkit for Python
-* introduced 2005
-* end-to-end system for working with the Python DBAPI, relational databases,
-  and the SQL language
+* the Database Toolkit for Python &trade;
+* Introduced 2005
+* A single system for all things relational database
 * Current release **1.4.1**
 * The 1.4 series is considered to be transitional for **SQLAlchemy 2.0**
-
-
-SQLAlchemy Goals
-=================================
-
-* Provide helpers, tools and components to assist with and automate database
-  application development at every level
-* Provide a consistent and fully featured facade over the Python DBAPI
-* Provide an industrial strength, but optional, object relational mapper (ORM)
-* Act as the foundation for any number of third party or in-house tools
 
 
 SQLAlchemy Philosophies
@@ -61,13 +54,10 @@ SQLAlchemy Philosophies
 * Bring the usage of different databases and adapters to an interface as
   consistent as possible...
 * ...but still expose distinct behaviors and features of each backend.
-* Never "hide" the database or its concepts - developers must know / continue
-  to think in SQL...
-* Instead....provide automation and DRY
-* Favor declarative and compositional patterns over flags and switches
-  whenever possible
-* Stay true to SQL - don't invent a new query language or relational paradigm
-
+* SQL and relational database concepts are exposed and explicit within the
+  API as much as possible, in contrast to the usual notion of "abstraction"
+* What's provided instead is **automation**; writing INSERTs, DDL, boilerplate
+  SQL, moving data between Python and database
 
 SQLAlchemy Overview
 =================================
@@ -82,31 +72,25 @@ SQLAlchemy consists of the Core and the ORM
 SQLAlchemy - Core
 =================================
 
-* Engine - a factory for database connections which are maintained by
-  a connection pool
-* Dialect - interprets generic SQL and database commands in terms of a specific
-  DBAPI and database backend.
-* Connection Pool - holds a collection of database connections in memory for
+* **Engine** - the front-facing entrypoint for database connections
+* **Dialect** - translates SQLAlchemy constructs for a specific kind of
+  database and database driver
+* **Connection Pool** - holds a collection of database connections in memory for
   fast re-use.
-* SQL Expression Language - Allows SQL statements to be written using Python
-  expressions
-* Schema / Types - Uses Python objects to represent tables, columns, and
-  datatypes.
+* **SQL Expression Language** - Python constructs that represent SQL statements
+* **Schema / Types** - Python constructs that represent tables, columns, and
+  datatypes, and other DDL
 
 
 SQLAlchemy - ORM
 =================================
 
-* Allows construction of Python objects which can be mapped to relational
-  database tables.
-* Transparently persists objects into their corresponding database tables using
-  the unit of work pattern.
-* Provides a query system which loads objects and attributes using SQL
-  generated from mappings.
-* Builds on top of the Core - uses the Core to generate SQL and talk to the
-  database.
-* Presents a slightly more object centric perspective, as opposed to a schema
-  centric perspective.
+* Maps a user-defined object model to database tables
+* Persists and updates the state of objects to the database using a pattern
+  called **unit of work**.
+* Provides an extended version of the SQL Expression Language where SQL
+  statements can be constructed in terms of the object model
+* Converts database rows into instances of user-defined model objects
 
 The Shift to 2.0
 ================
@@ -116,10 +100,12 @@ The Shift to 2.0
     * Fully removing old patterns that have been discouraged against for many years
     * Making the experience of the Core and ORM APIs much more similar and
       cross-compatible
+    * A new emphasis on explicitness and non-ambiguity
 * Other changes:
     * Python 3 only
     * asyncio fully supported (this is in 1.4)
     * hopefully improved pep-484 / mypy support (also released in 1.4)
+
 
 SQLAlchemy 1.4 - The Transition
 ================================
@@ -220,14 +206,16 @@ Important DBAPI Facts
 SQLAlchemy and the DBAPI
 =================================
 
-* SQLAlchemy's first goal is to "tame" the DBAPI.
-* Provides a consistent URL-based connectivity pattern
-* Provides a fully-encompassing, extensible type system
-* Abstracts away autoincrement / sequences / identity columns and post-fetching
-  for INSERT statements
-* Provides a single bound parameter format
-* Provides a fixed exception hierarchy (doesn't normalize messaging though)
-
+* The **Engine** component provides a facade over the Python DBAPI
+* Connectivity is established using a consistent URL format
+* Provides consistency including the following areas:
+    * Transaction control
+    * Accommodating sequences/identity/defaults on INSERT/UPDATE
+    * a wide range of data translation issues that vary across all
+      drivers
+    * Driver-specific quirks, parameters, methods, datatypes, etc.
+    * Provides a single bound parameter format
+    * Partial cross-compatibility for exception hierarchies
 
 The SQLAlchemy Engine
 =================================
@@ -249,7 +237,7 @@ Level 2, Table Metadata, Reflection, DDL
 .. image:: onion.png
     :align: center
 
-What is "Metadata"?
+What is "Database Metadata"?
 =================================
 
 * Popularized by Martin Fowler, Patterns of Enterprise Architecture
@@ -284,19 +272,6 @@ Some Basic Types
 * ``Numeric()`` - precision numerics using Python ``Decimal()``
 * ``JSON()`` - now supported by PostgreSQL, MySQL and SQLite
 * ``ARRAY()``- supported by PostgreSQL
-
-
-CREATE and DROP
-=================================
-
-* ``metadata.create_all(connection, checkfirst=<True|False>)`` emits CREATE
-  statements for all tables.
-* ``table.create(connection, checkfirst=<True|False>)`` emits CREATE for a single
-  table.
-* ``metadata.drop_all(connection, checkfirst=<True|False>)`` emits DROP statements
-  for all tables.
-* ``table.drop(connection, checkfirst=<True| False>)`` emits DROP for a single
-  table.
 
 
 Level 3, Core SQL Expression Language

@@ -83,13 +83,12 @@ row.emp_name
 
 ### slide::
 # it also has a dictionary interface, which is available via an accessor
-# call ._mapping
+# called ._mapping
 row._mapping["emp_name"]
 
 ### slide:: p
-# result objects can also be iterated and tuple assignment can be
-# used for rows as well
-
+# more common idiomatic Python access including iteration and tuple
+# assignment is available (and likely the most common usage)
 result = connection.execute(text("select * from employee"))
 for emp_id, emp_name in result:
     print(f"employee id: {emp_id}   employee name: {emp_name}")
@@ -108,14 +107,11 @@ result.all()
 connection.close()
 
 ### slide::
-# the connect/release process in modern Python is preferred to be
-# via context managers
+# Usually, modern Python code should manage the connect/release process
+# using context managers.
 
 with engine.connect() as connection:
     rows = connection.execute(text("select * from employee")).all()
-
-    # releases connection back to the pool
-
 
 ### slide:: p
 ### title:: transactions, committing

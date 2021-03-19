@@ -434,9 +434,9 @@ separate.   SQLAlchemy calls this **imperative style**.
 
     # class is declared without any awareness of database
     class User:
-        def __init__(self, name, username):
+        def __init__(self, name, fullname=None):
             self.name = name
-            self.username = username
+            self.fullname = fullname
 
     # elsewhere, it's associated with a database table
     registry.mapper(
@@ -458,25 +458,16 @@ SQLAlchemy ORM
 * The SQLAlchemy ORM is essentially a data mapper style ORM.
 * Most users use declarative configuration style, but imperative style and
   a range of variants in between are supported as well.
-* The ORM builds upon SQLAlchemy Core.  All of the SQL Expression language
-  concepts are present when working with the ORM as well.
-* In contrast to the SQL Expression language, which presents a schema-centric
-  view of data, it presents a domain-model centric view of data.
+* Extends SQLAlchemy Core, in particular extending the SQL Expression language
+  to work with domain classes as well as table constructs.
+* Key features of SQLAlchemy's ORM include:
+    * **Unit of Work** - transparently sends INSERT/UPDATE/DELETE to the
+      database in batches
+    * **Identity Map** - objects are kept unique in memory based on their
+      primary key identity
+    * **Lazy / Eager Loading** - related attributes and collections can be
+      loaded either **on demand** (lazy), or **upfront** (eager)
 
-
-Key ORM Patterns
-=================================
-
-* **Unit of Work** - objects are maintained by a system that tracks changes over
-  the course of a transaction, and flushes pending changes periodically, in a
-  transparent or semi-transparent manner
-* **Identity Map** - objects are tracked by their primary key within the unit of
-  work, and are kept unique on that primary key identity.
-* **Lazy Loading** - Some attributes of an object may emit additional SQL queries
-  when they are accessed.
-* **Eager Loading** - attributes are loaded immediately.  Related tables may be
-  loaded using JOINs to the primary SELECT statement or additional queries
-  can be emitted.
 
 ORM Walkthrough
 =================================

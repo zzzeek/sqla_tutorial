@@ -7,10 +7,10 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import registry
 from sqlalchemy.orm import relationship
 
-reg = registry()
+mapper_registry = registry()
 
 
-@reg.mapped
+@mapper_registry.mapped
 class User:
     __tablename__ = "user_account"
 
@@ -31,7 +31,7 @@ class User:
 from sqlalchemy import ForeignKey
 
 
-@reg.mapped
+@mapper_registry.mapped
 class Address:
     __tablename__ = "address"
 
@@ -51,24 +51,25 @@ class Address:
 from sqlalchemy import create_engine
 
 engine = create_engine("sqlite://")
-with engine.connect() as connection:
+with engine.begin() as connection:
     reg.metadata.create_all(connection)
 
 ### slide:: p
-# Insert data into the User table...
+# Insert data into the User table. Here we illustrate the sessionmaker
+# factory as a transactional context manager.
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
 
-session = Session(bind=engine, future=True)
+Session = sessionmaker(bind=engine, future=True)
 
-session.add_all(
-    [
-        User(username="spongebob", fullname="Spongebob Squarepants"),
-        User(username="sandy", fullname="Sandy Cheeks"),
-        User(username="patrick", fullname="Patrick Star"),
-    ]
-)
-session.commit()
+with Session.begin() as session:
+    session.add_all(
+        [
+            User(username="spongebob", fullname="Spongebob Squarepants"),
+            User(username="sandy", fullname="Sandy Cheeks"),
+            User(username="patrick", fullname="Patrick Star"),
+        ]
+    )
 
 ### slide::
 # a new User object also gains an empty "addresses" collection now.
@@ -94,6 +95,8 @@ squidward.addresses[1].user
 
 ### slide::
 # adding User->squidward will *cascade* each Address into the Session as well.
+
+session = Session()
 
 session.add(squidward)
 session.new

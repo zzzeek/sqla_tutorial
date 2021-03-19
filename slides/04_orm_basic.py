@@ -6,7 +6,7 @@
 from sqlalchemy.orm import registry
 
 
-reg = registry()
+mapper_registry = registry()
 
 ### slide::
 # Using the registry, we can map classes in various ways, below illustrated
@@ -18,7 +18,7 @@ reg = registry()
 from sqlalchemy import Column, Integer, String
 
 
-@reg.mapped
+@mapper_registry.mapped
 class User:
     __tablename__ = "user_account"
 
@@ -55,12 +55,6 @@ spongebob
 
 repr(spongebob.id)
 
-### slide:: i
-# Since SQLAlchemy 1.0, these "implicit" attribute values are not
-# actually part of the object's state even when we access them.
-
-spongebob.__dict__
-
 
 ### slide:: p
 # Using our registry, we can create a database schema for this class using
@@ -70,17 +64,20 @@ from sqlalchemy import create_engine
 
 engine = create_engine("sqlite://")
 with engine.begin() as connection:
-    registry.metadata.create_all(connection)
+    mapper_registry.metadata.create_all(connection)
 
 ### slide::
 # To persist and load User objects from the database, we
-# use a Session object.  The Session object makes use of a connection
+# use a Session object, illustrated here from a factory called
+# sessionmaker.  The Session object makes use of a connection
 # factory (i.e. an Engine) and will handle the job of connecting,
 # committing, and releasing connections to this engine.
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
 
-session = Session(bind=engine, future=True)
+Session = sessionmaker(bind=engine, future=True)
+
+session = Session()
 
 ### slide::
 # new objects are placed into the Session using add().
@@ -95,16 +92,17 @@ session.new
 
 ### slide:: p
 # We can now query for this **pending** row, by emitting a SELECT statement
-# that will refer to "User" entities.   The way
-# this will work is the ORM will first **flush** pending changes to the
-# database, then emit the SELECT.  In SQLAlchemy 1.4/2.0, the same Core
-# select() statement can deliver ORM results to us if we use
-# session.execute(), rather than connection.execute().
+# that will refer to "User" entities.   This will first **autoflush**
+# the pending changes, then SELECT the row we requested.
 
 from sqlalchemy import select
 
 select_statement = select(User).filter_by(username="spongebob")
 result = session.execute(select_statement)
+
+### slide:: i
+# We can get the data back from the result, in this case using the
+# .scalar() method which will return the first column of the first row.
 also_spongebob = result.scalar()
 also_spongebob
 
@@ -159,7 +157,8 @@ session.commit()
 ### slide:: p
 # After a commit, theres no transaction.  The Session
 # *invalidates* all data, so that accessing them will automatically
-# start a *new* transaction and re-load from the database.
+# start a *new* transaction and re-load from the database.  This is
+# our first example of the ORM *lazy loading* pattern.
 
 spongebob.fullname
 
@@ -241,31 +240,19 @@ result = session.execute(query)
 for user_obj in result.scalars():
     print(user_obj)
 
-### slide:: p
-# The Result we get back from Session.execute() shares a common base with
-# the same Result that we got back when using connection.execute(), so
-# the same methods are available such as one(), one_or_none(), first(),
-# etc.   Modifiers such as .scalars() and .columns() may also be applied
-# first before receiving results:
+### slide:: pi
+# we can also qualify the rows we want to get back with methods like
+# .one()
 
 result = session.execute(query)
 
 user_obj = result.scalars().one()
 print(user_obj)
 
-### slide:: pi
-# there is also .scalar_one() to mix both scalar() and one() with a single
-# method:
-
-result = session.execute(query)
-
-user_obj = result.scalar_one()
-print(user_obj)
-
 
 ### slide:: p
 # An ORM query can make use of any combination of columns and entities.
-# to request the fields of User separately, we name them separately in the
+# To request the fields of User separately, we name them separately in the
 # columns clause
 
 query = select(User.username, User.fullname)
@@ -278,7 +265,7 @@ for row in result:
 query = select(User, User.username)
 result = session.execute(query)
 for row in result:
-    print(f"{row.username} {row.fullname}")
+    print(f"{row.User.id} {row.User.fullname} {row.username}")
 
 ### slide:: p
 # the WHERE clause is either by filter_by(), which is convenient
@@ -290,8 +277,8 @@ for (username, ) in session.execute(
 ):
     print(username)
 
-### slide:: p
-# or where(), which is also available as filter() for cross-compatibility
+### slide:: pi
+# or where() for more explicitness
 
 from sqlalchemy import or_
 

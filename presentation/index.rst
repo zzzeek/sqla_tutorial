@@ -35,29 +35,33 @@ Starting Out
     * querying: selecting rows with SELECT
     * modifying data with INSERT, UPDATE, DELETE
     * general idea of database transactions (e.g. BEGIN/COMMIT/ROLLBACK)
-    * joins, grouping
+    * joins, subqueries, table aliases, common table expressions (CTE)
 
 
 Presenting SQLAlchemy
 =================================
 
-* the Database Toolkit for Python &trade;
-* Introduced 2005
-* A single system for all things relational database
+* The Database Toolkit for Python |(TM)|
+* Introduced 2005, first release February 2006
+* A single system for all things Python + relational databases
 * Current release **1.4.1**
 * The 1.4 series is considered to be transitional for **SQLAlchemy 2.0**
 
 
+.. |(TM)| unicode:: U+2122
+
 SQLAlchemy Philosophies
 =================================
 
-* Bring the usage of different databases and adapters to an interface as
-  consistent as possible...
-* ...but still expose distinct behaviors and features of each backend.
-* SQL and relational database concepts are exposed and explicit within the
-  API as much as possible, in contrast to the usual notion of "abstraction"
+* Bring the usage of different databases and adapters to a Python interface as
+  consistent and cross compatible as possible...
+* ...but still expose distinct behaviors and features of each kind of database.
+* SQL and relational database concepts aren't hidden, and are instead very
+  explicit within the API as much as possible, in contrast to the usual notion
+  of "abstraction"
 * What's provided instead is **automation**; writing INSERTs, DDL, boilerplate
-  SQL, moving data between Python and database
+  SQL, moving data between Python and database can be done in a succinct and
+  declarative fashion.
 
 SQLAlchemy Overview
 =================================
@@ -78,7 +82,7 @@ SQLAlchemy - Core
 * **Connection Pool** - holds a collection of database connections in memory for
   fast re-use.
 * **SQL Expression Language** - Python constructs that represent SQL statements
-* **Schema / Types** - Python constructs that represent tables, columns, and
+* **Schema / Types** - Python constructs that represent tables, columns,
   datatypes, and other DDL
 
 
@@ -91,6 +95,10 @@ SQLAlchemy - ORM
 * Provides an extended version of the SQL Expression Language where SQL
   statements can be constructed in terms of the object model
 * Converts database rows into instances of user-defined model objects
+* Provides a system for objects to be related each other through collections
+  and many-to-one relationships
+* Synchronizes the state of objects with the state of the database data in an
+  ongoing transaction.
 
 The Shift to 2.0
 ================
@@ -339,18 +347,6 @@ What does an ORM Do?
 
 .. rst-class:: subheader
 
-Some ORMs can also represent arbitrary rows as domain objects within the
-application, that is, rows derived from SELECT statements or views.
-
-.. image:: selectorm.png
-    :align: center
-
-
-What does an ORM Do?
-=================================
-
-.. rst-class:: subheader
-
 Most ORMs also represent basic compositions, primarily one-to-many and
 many-to-one, using foreign key associations.
 
@@ -377,10 +373,13 @@ Flavors of ORM
 The two general styles of ORM are Active Record and Data Mapper. Active Record
 has domain objects handle their own persistence::
 
-    user_record = User(name="ed", fullname="Ed Jones")
+    user_record = User(name="spongebob")
     user_record.save()
-    user_record = User.query(name='ed').fetch()
-    user_record.fullname = "Edward Jones"
+
+    # ... later
+
+    user_record = User.query(name='spongebob').fetch()
+    user_record.fullname = "Spongebob Squarepants"
     user_record.save()
 
 
@@ -390,21 +389,25 @@ Flavors of ORM
 The Data Mapper approach tries to keep the details of persistence separate from
 the object being persisted::
 
-    with Session(engine) as session:
-      user_record = User(name="ed", fullname="Ed Jones")
-      session.add(user_record)
-      user_record = session.execute(
-          select(User).where(User.name == 'squidward')
-      ).scalars().first()
-      user_record.fullname = "Edward Jones"
-      session.commit()
+    with Session.begin() as session:
+        user_record = User(name="spongebob")
+        session.add(user_record)
+
+    # ... later
+
+    with Session.begin() as session:
+        user_record = session.execute(
+            select(User).where(User.name == 'spongebob')
+        ).scalars().first()
+        user_record.fullname = "Spongebob Squarepants"
 
 
 Flavors of ORM
 =================================
 
 ORMs may also provide different configurational patterns. Most use an "all-at-
-once", or declarative style where class and table information is together.
+once" style where class and table information is together.  SQLAlchemy
+calls this **declarative style**.
 
 ::
 
@@ -424,13 +427,13 @@ once", or declarative style where class and table information is together.
 Flavors of ORM
 =================================
 
-A less common style keeps the declaration of domain model and table metadata
-separate.
+The other way is to keep the declaration of domain model and table metadata
+separate.   SQLAlchemy calls this **imperative style**.
 
 ::
 
     # class is declared without any awareness of database
-    class User(object):
+    class User:
         def __init__(self, name, username):
             self.name = name
             self.username = username
@@ -453,8 +456,8 @@ SQLAlchemy ORM
 
 
 * The SQLAlchemy ORM is essentially a data mapper style ORM.
-* Modern versions use declarative configuration; the "domain and schema
-  separate" configuration model is present underneath this layer.
+* Most users use declarative configuration style, but imperative style and
+  a range of variants in between are supported as well.
 * The ORM builds upon SQLAlchemy Core.  All of the SQL Expression language
   concepts are present when working with the ORM as well.
 * In contrast to the SQL Expression language, which presents a schema-centric
@@ -464,14 +467,14 @@ SQLAlchemy ORM
 Key ORM Patterns
 =================================
 
-* Unit of Work - objects are maintained by a system that tracks changes over
+* **Unit of Work** - objects are maintained by a system that tracks changes over
   the course of a transaction, and flushes pending changes periodically, in a
   transparent or semi-transparent manner
-* Identity Map - objects are tracked by their primary key within the unit of
+* **Identity Map** - objects are tracked by their primary key within the unit of
   work, and are kept unique on that primary key identity.
-* Lazy Loading - Some attributes of an object may emit additional SQL queries
+* **Lazy Loading** - Some attributes of an object may emit additional SQL queries
   when they are accessed.
-* Eager Loading - attributes are loaded immediately.  Related tables may be
+* **Eager Loading** - attributes are loaded immediately.  Related tables may be
   loaded using JOINs to the primary SELECT statement or additional queries
   can be emitted.
 

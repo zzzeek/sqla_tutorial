@@ -52,7 +52,7 @@ from sqlalchemy import create_engine
 
 engine = create_engine("sqlite://")
 with engine.begin() as connection:
-    reg.metadata.create_all(connection)
+    mapper_registry.metadata.create_all(connection)
 
 ### slide:: p
 # Insert data into the User table. Here we illustrate the sessionmaker
@@ -169,9 +169,10 @@ session.execute(stmt).all()
 # however the most accurate and succinct way is to use the relationship-bound
 # attribute.
 
-stmt = select(User, Address).join(User.addresses).filter(
-    Address.email_address == "squidward@gmail.com"
-
+stmt = (
+    select(User, Address).
+    join(User.addresses).
+    where(Address.email_address == "squidward@gmail.com")
 )
 
 session.execute(stmt).first()
@@ -184,9 +185,13 @@ from sqlalchemy.orm import aliased
 
 a1, a2 = aliased(Address), aliased(Address)
 
-stmt = select(User).join(a1).join(a2).where(
-    a1.email_address == "squidward@gmail.com"
-).where(a2.email_address == "squidward@hotmail.com")
+stmt = (
+    select(User).
+    join_from(User, a1).
+    join_from(User, a2).
+    where(a1.email_address == "squidward@gmail.com").
+    where(a2.email_address == "squidward@hotmail.com")
+)
 
 session.execute(stmt).all()
 
@@ -194,18 +199,19 @@ session.execute(stmt).all()
 # to join() to an aliased() object with more specificity, a form such
 # as "Class.relationship.of_type(aliased)" may be used
 
-stmt = select(User).join(User.addresses.of_type(a1)).join(
-    User.addresses.of_type(a2)
-).where(a1.email_address == "squidward@gmail.com").where(
-    a2.email_address == "squidward@hotmail.com"
+stmt = (
+    select(User).
+    join(User.addresses.of_type(a1)).
+    join(User.addresses.of_type(a2)).
+    where(a1.email_address == "squidward@gmail.com").
+    where(a2.email_address == "squidward@hotmail.com")
 )
 
 session.execute(stmt).all()
 
 ### slide:: p
-# We can also join with subqueries.  subquery() returns
-# a Subquery construct for us to use.  This converts the ORM Query
-# object into a Core select().subquery() construct.
+# As was the case with Core, we can use subqueries and joins
+# with ORM mapped classes as well.
 
 from sqlalchemy import func
 
@@ -215,8 +221,9 @@ subq = (
     .subquery()
 )
 
-stmt = select(User.username, func.coalesce(subq.c.count, 0)).outerjoin(
-    subq, User.id == subq.c.user_id
+stmt = (
+    select(User.username, func.coalesce(subq.c.count, 0)).
+    outerjoin(subq, User.id == subq.c.user_id)
 )
 session.execute(stmt).all()
 
@@ -229,10 +236,11 @@ session.execute(stmt).all()
 # statements emitted when loading collections against a parent result.
 # As SQLAlchemy is a full featured ORM, we of course include this! :)
 
-for user in session.execute(
-    select(User)
-).scalars():
-    print(user, user.addresses)
+with Session() as session:
+    for user in session.execute(
+        select(User)
+    ).scalars():
+        print(user, user.addresses)
 
 ### slide:: p
 # However, SQLAlchemy was designed from the start to tame the "N plus one"
@@ -240,14 +248,16 @@ for user in session.execute(
 # and the most effective strategy for collections is currently the
 # **selectinload** option.
 
-session.rollback()  # so we can see the load happen again.
-
 from sqlalchemy.orm import selectinload
 
-for user in session.execute(
-    select(User).options(selectinload(User.addresses))
-).scalars():
-    print(user, user.addresses)
+with Session() as session:
+    for user in session.execute(
+        select(User).
+        options(
+            selectinload(User.addresses)
+        )
+    ).scalars():
+        print(user, user.addresses)
 
 ### slide:: p
 # The oldest eager loading strategy is joinedload().  This uses a LEFT OUTER
@@ -255,17 +265,16 @@ for user in session.execute(
 # work for collections as well, however it is best tailored towards many-to-one
 # relationships, particularly those where the foreign key is "not null".
 
-session.rollback()
-
 from sqlalchemy.orm import joinedload
 
-for address_obj in session.execute(
-    select(Address).
-    options(
-        joinedload(Address.user, innerjoin=True)
-    )
-).scalars():
-    print(address_obj.email_address, address_obj.user.username)
+with Session() as session:
+    for address_obj in session.execute(
+        select(Address).
+        options(
+            joinedload(Address.user, innerjoin=True)
+        )
+    ).scalars():
+        print(address_obj.email_address, address_obj.user.username)
 
 ### slide:: p
 ### title:: Instant Zen of Eager Loading
@@ -273,13 +282,14 @@ for address_obj in session.execute(
 # only how related collections are loaded.   An explicit join()
 # can be mixed with the joinedload() and they are kept separate
 
-for address in session.execute(
-    select(Address)
-    .join(Address.user)
-    .where(User.username == "squidward")
-    .options(joinedload(Address.user))
-).scalars():
-    print(address, address.user)
+with Session() as session:
+    for address in session.execute(
+        select(Address)
+        .join(Address.user)
+        .where(User.username == "squidward")
+        .options(joinedload(Address.user))
+    ).scalars():
+        print(address, address.user)
 
 ### slide:: p
 # To optimize the common case of "join to many-to-one and also load it on
@@ -287,13 +297,14 @@ for address in session.execute(
 
 from sqlalchemy.orm import contains_eager
 
-for address in session.execute(
-    select(Address)
-    .join(Address.user)
-    .where(User.username == "squidward")
-    .options(contains_eager(Address.user))
-).scalars():
-    print(address, address.user)
+with Session() as session:
+    for address in session.execute(
+        select(Address)
+        .join(Address.user)
+        .where(User.username == "squidward")
+        .options(contains_eager(Address.user))
+    ).scalars():
+        print(address, address.user)
 
 
 

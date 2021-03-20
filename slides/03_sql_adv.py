@@ -140,7 +140,8 @@ select_stmt = (
             address_alias_1.c.email_address,
             address_alias_2.c.email_address,
     )
-    .join_from(user_table, address_alias_1).join(address_alias_2)
+    .join_from(user_table, address_alias_1)
+    .join_from(user_table, address_alias_2)
     .where(address_alias_1.c.email_address == "spongebob@spongebob.com")
     .where(address_alias_2.c.email_address == "spongebob@gmail.com")
 )
@@ -226,7 +227,7 @@ address_corr = (
 # we see both tables in the FROM clause.
 print(address_corr)
 
-### slide:: i
+### slide:: p
 # However, a scalar subquery will by default **auto-correlate** in a larger
 # SQL expression, omitting a FROM that is found in the immediate
 # enclosing SELECT.

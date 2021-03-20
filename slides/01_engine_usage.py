@@ -87,8 +87,8 @@ row.emp_name
 row._mapping["emp_name"]
 
 ### slide:: p
-# more common idiomatic Python access including iteration and tuple
-# assignment is available (and likely the most common usage)
+# common idiomatic Python patterns including iteration and tuple
+# assignment are available (and likely the most common usage)
 result = connection.execute(text("select * from employee"))
 for emp_id, emp_name in result:
     print(f"employee id: {emp_id}   employee name: {emp_name}")
@@ -106,7 +106,7 @@ result.all()
 # in overflow mode.
 connection.close()
 
-### slide::
+### slide:: p
 # Usually, modern Python code should manage the connect/release process
 # using context managers.
 
@@ -138,8 +138,8 @@ with engine.begin() as connection:
         text("insert into employee_of_month (emp_name) values (:emp_name)"),
         {"emp_name": "squidward"},
     )
-    # commits transaction, releases connection back to the connection pool.
-    # rolls back if there is an exception before re-throwing
+ # end of block: commits transaction, releases connection back to the
+ # connection pool. rolls back if there is an exception before re-throwing
 
 
 ### slide:: p
@@ -151,8 +151,8 @@ with engine.connect() as connection:
             text("update employee_of_month set emp_name = :emp_name"),
             {"emp_name": "squidward"},
         )
-        # commits transaction, or rollback if exception
-    # closes connection
+    # end of inner block: commits transaction, or rollback if exception
+ # end of outer block: releases connection to the connection pool
 
 
 ### slide:: p
@@ -176,7 +176,7 @@ with engine.connect() as connection:
             # releases savepoint
 
         # commits transaction, or rollback if exception
-    # closes connection
+    # releases connection to the connection pool
 
 ### slide:: p
 # most DBAPIs support autocommit now, which is why SQLAlchemy no longer

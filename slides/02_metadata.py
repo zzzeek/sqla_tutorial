@@ -83,7 +83,7 @@ with engine.begin() as conn:
 # at this point, the two Table objects we've created are part of a collection
 # in the MetaData object called .tables
 metadata.tables.keys()
-metadata.tables['user']
+metadata.tables['user_account']
 
 
 ### slide:: p
@@ -98,7 +98,7 @@ addresses_table = Table(
     metadata,
     Column("id", Integer, primary_key=True),
     Column("email_address", String(100), nullable=False),
-    Column("user_id", ForeignKey("user.id"), nullable=False),
+    Column("user_id", ForeignKey("user_account.id"), nullable=False),
 )
 
 with engine.begin() as conn:
@@ -146,7 +146,7 @@ with engine.begin() as conn:
 metadata2 = MetaData()
 
 with engine.connect() as conn:
-    user_reflected = Table("user", metadata2, autoload_with=conn)
+    user_reflected = Table("user_account", metadata2, autoload_with=conn)
 
 
 ### slide:: p
@@ -200,7 +200,7 @@ published
 ### slide:: i
 # ready to use
 
-print(select(story).join(published)
+print(select(story).join(published))
 
 ### slide::
 ### title:: Questions?

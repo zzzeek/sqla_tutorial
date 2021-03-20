@@ -44,7 +44,7 @@ Presenting SQLAlchemy
 * The Database Toolkit for Python |(TM)|
 * Introduced 2005, first release February 2006
 * A single system for all things Python + relational databases
-* Current release **1.4.1**
+* Current release **1.4.2**
 * The 1.4 series is considered to be transitional for **SQLAlchemy 2.0**
 
 
@@ -92,8 +92,8 @@ SQLAlchemy - ORM
 * Maps a user-defined object model to database tables
 * Persists and updates the state of objects to the database using a pattern
   called **unit of work**.
-* Provides an extended version of the SQL Expression Language where SQL
-  statements can be constructed in terms of the object model
+* Provides an extended version of the Core SQL Expression Language which
+  adds support for queries in terms of the object model
 * Converts database rows into instances of user-defined model objects
 * Provides a system for objects to be related each other through collections
   and many-to-one relationships
@@ -143,7 +143,7 @@ SQLAlchemy 1.4 - The Transition
   discovered approach to bridge async/sync APIs
 
 
-SQLAlchemy is like an Onion
+The SQLAlchemy "Onion"
 =================================
 
 .. image:: onion.png
@@ -151,11 +151,12 @@ SQLAlchemy is like an Onion
 
 .. rst-class:: center-text
 
-Can be learned from the inside out, or the outside in.
+SQLAlchemy can be understood most fundamentally working from the
+inside out.
 
 
-Level 1, Engine, Connection, Transactions
-==========================================
+Green Onions - Engine, Connection, Transactions
+===============================================
 
 .. image:: onion.png
     :align: center
@@ -198,18 +199,16 @@ DBAPI - Nutshell
 Important DBAPI Facts
 =================================
 
-* DBAPI assumes by default that a transaction is always in progress. There is
-  no ``.begin()`` method, only ``.commit()`` and ``.rollback()``.
-* Most DBAPIs achieve this by employing an "autobegin" system that is typically
-  invoked when the first statement is run.
-* Most DBAPIs now have an ".autocommit" feature, disabled by default. When
-  enabled, the "autobegin" is turned off and there is never a transaction in
-  progress; ``.commit()`` and ``.rollback()`` are no-ops.
+* All DBAPIs have significant inconsistencies in how they behave.
+  Non-trivial DBAPI-agnostic code can't be produced without additional library
+  abstractions
 * DBAPI encourages the use of bound parameters when statements are executed,
   but it has **six** different formats.
-* All DBAPIs have significant inconsistencies in how they behave.  It is not
-  possible to write non-trivial DBAPI-agnostic code without the use of
-  libraries on top of it.
+* The DBAPI has a very specific way of doing transactions, which is that they
+  are begun **implicitly**, then committed or rolled back **explicitly**.
+  There is no ``.begin()`` method.
+* The implicit transactions can be turned off using **autocommit mode**,
+  which is now a common feature (though not part of the pep-249 spec)
 
 SQLAlchemy and the DBAPI
 =================================
@@ -239,8 +238,8 @@ database connectivity.
 
 
 
-Level 2, Table Metadata, Reflection, DDL
-=========================================
+Onion Level Blue - Table Metadata, Reflection, DDL
+==================================================
 
 .. image:: onion.png
     :align: center
@@ -252,10 +251,10 @@ What is "Database Metadata"?
 * Describes the structure of the database, i.e. tables, columns, constraints,
   in terms of data structures in Python
 * Serves as the basis for SQL generation and object relational mapping
-* Can generate to a schema, i.e. turned into DDL that is emitted to the
+* Can generate **to** a schema, i.e. turned into DDL that is emitted to the
   database
-* Can be generated from a schema, i.e. database introspection is performed
-  to generate Python structures that represent those tables
+* Can be generated **from** a schema, i.e. database introspection is performed
+  to generate Python structures that represent existing tables, constraints, etc.
 * Forms the basis for database migration tools like SQLAlchemy Alembic.
 
 
@@ -266,24 +265,9 @@ MetaData and Table
 
     .venv/bin/sliderepl 02_metadata.py
 
-Some Basic Types
-=================================
 
-* ``Integer()`` - basic integer type, generates INT
-* ``String()`` - strings, generates VARCHAR
-* ``Unicode()`` - Unicode strings - generates VARCHAR, NVARCHAR depending on
-  database
-* ``Boolean()`` - generates BOOLEAN, INT, TINYINT, BIT
-* ``DateTime()`` - generates DATETIME or TIMESTAMP, returns Python datetime()
-  objects
-* ``Float()`` - floating point values
-* ``Numeric()`` - precision numerics using Python ``Decimal()``
-* ``JSON()`` - now supported by PostgreSQL, MySQL and SQLite
-* ``ARRAY()``- supported by PostgreSQL
-
-
-Level 3, Core SQL Expression Language
-=====================================
+Yellow Onions - Core SQL Expression Language
+============================================
 
 .. image:: onion.png
     :align: center
@@ -327,47 +311,8 @@ Already have the perfect SQL? Use ``text()``
     * Works with the ORM too
     * Just remember to **use bound parameters** for variables that change
 
-SQLAlchemy uses text() internally for backend specific SQL
-==========================================================
-
-.. rst-class:: tinycode
-
-::
-
-    # actual PostgreSQL dialect method
-    def get_indexes(self, connection, table_name, schema, **kw):
-        # ...
-
-        IDX_SQL = """
-          SELECT
-              i.relname as relname, ix.indisunique, ix.indexprs,
-              a.attname, a.attnum, c.conrelid, ix.indkey::varchar,
-              ix.indoption::varchar, i.reloptions, am.amname,
-              pg_get_expr(ix.indpred, ix.indrelid), ix.indnkeyatts
-          FROM
-              pg_class t
-                    join pg_index ix on t.oid = ix.indrelid
-                    join pg_class i on i.oid = ix.indexrelid
-                    left outer join pg_attribute a
-                        on t.oid = a.attrelid and a.attnum = ANY(ix.indkey)
-                    left outer join pg_constraint c
-                        on (ix.indrelid = c.conrelid and
-                            ix.indexrelid = c.conindid and
-                            c.contype in ('p', 'u', 'x'))
-                    left outer join pg_am am
-                        on i.relam = am.oid
-          WHERE
-              t.relkind IN ('r', 'v', 'f', 'm', 'p')
-              and t.oid = :table_oid and ix.indisprimary = 'f'
-          ORDER BY t.relname, i.relname
-        """
-
-        t = sql.text(IDX_SQL).columns(relname=sqltypes.Unicode, attname=sqltypes.Unicode)
-        result = connection.execute(t, {"table_oid": table_oid)
-
-
-Level 4, Object Relational Mapping
-==================================
+Object Relational Mapping - the Outer Onion
+===========================================
 
 .. image:: onion.png
     :align: center
@@ -419,8 +364,8 @@ What does an ORM Do?
     * Provide various patterns for concurrency, including row versioning
     * Provide patterns for data validation and coercion
 
-Flavors of ORM
-=================================
+Flavors of ORM - Active Record vs. Data Mapper
+==============================================
 
 The two general styles of ORM are Active Record and Data Mapper. Active Record
 has domain objects handle their own persistence::
@@ -435,8 +380,8 @@ has domain objects handle their own persistence::
     user_record.save()
 
 
-Flavors of ORM
-=================================
+Flavors of ORM - Active Record vs. Data Mapper
+===============================================
 
 The Data Mapper approach tries to keep the details of persistence separate from
 the object being persisted::
@@ -454,8 +399,8 @@ the object being persisted::
         user_record.fullname = "Spongebob Squarepants"
 
 
-Flavors of ORM
-=================================
+Flavors of ORM - Declarative Style Configuration
+=================================================
 
 ORMs may also provide different configurational patterns. Most use an "all-at-
 once" style where class and table information is together.  SQLAlchemy
@@ -476,8 +421,8 @@ calls this **declarative style**.
         email_address = Column(String(length=100))
         user = relationship("User")
 
-Flavors of ORM
-=================================
+Flavors of ORM - Imperative Style Configuration
+===============================================
 
 The other way is to keep the declaration of domain model and table metadata
 separate.   SQLAlchemy calls this **imperative style**.

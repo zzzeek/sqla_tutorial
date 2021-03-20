@@ -85,12 +85,13 @@ print(user_table.c.fullname == None)
 print(user_table.c.fullname != None)
 
 ### slide::
-# "+" might mean "addition"....
+# Operators may also be type sensitive.
+# "+" with numbers means "addition"....
 
 print(user_table.c.id + 5)
 
 ### slide:: i
-# ...or might mean "string concatenation"
+# ...with strings it means "string concatenation"
 
 print(user_table.c.fullname + " Jr.")
 
@@ -190,7 +191,7 @@ connection.execute(select_stmt).all()
 
 ### slide:: p
 # More Result methods.   In the engine chapter, we were introduced to
-# .all(), .first(), and .scalars().   Result also has most of what
+# .all() and .first().   Result also has most of what
 # previously was only in the ORM, such as the .one() and .one_or_none()
 # methods.
 
@@ -207,7 +208,7 @@ result = connection.execute(
 )
 result.one()
 
-### slide:: pi
+### slide:: p
 # one_or_none() will only raise if there are more than one row, but
 # returns None for no result
 result = connection.execute(

@@ -313,6 +313,58 @@ SQL Expressions
 
     .venv/bin/sliderepl 03_sql_adv.py
 
+Already have the perfect SQL? Use ``text()``
+============================================
+
+* SQL Expression language constructs give us:
+    * composability - we can build and rearrange SQL using Python objects
+    * database agnosticism - our query will run on lots of different backends
+* What if we have the perfect SQL query already?
+    * Use ``text()`` !
+    * This is usually for a more complex query that's very specific and
+      for whatever reason it's already written out.    You're done!
+    * It can be changed to SQL components later if needed
+    * Works with the ORM too
+    * Just remember to **use bound parameters** for variables that change
+
+SQLAlchemy uses text() internally for backend specific SQL
+==========================================================
+
+.. rst-class:: tinycode
+
+::
+
+    # actual PostgreSQL dialect method
+    def get_indexes(self, connection, table_name, schema, **kw):
+        # ...
+
+        IDX_SQL = """
+          SELECT
+              i.relname as relname, ix.indisunique, ix.indexprs,
+              a.attname, a.attnum, c.conrelid, ix.indkey::varchar,
+              ix.indoption::varchar, i.reloptions, am.amname,
+              pg_get_expr(ix.indpred, ix.indrelid), ix.indnkeyatts
+          FROM
+              pg_class t
+                    join pg_index ix on t.oid = ix.indrelid
+                    join pg_class i on i.oid = ix.indexrelid
+                    left outer join pg_attribute a
+                        on t.oid = a.attrelid and a.attnum = ANY(ix.indkey)
+                    left outer join pg_constraint c
+                        on (ix.indrelid = c.conrelid and
+                            ix.indexrelid = c.conindid and
+                            c.contype in ('p', 'u', 'x'))
+                    left outer join pg_am am
+                        on i.relam = am.oid
+          WHERE
+              t.relkind IN ('r', 'v', 'f', 'm', 'p')
+              and t.oid = :table_oid and ix.indisprimary = 'f'
+          ORDER BY t.relname, i.relname
+        """
+
+        t = sql.text(IDX_SQL).columns(relname=sqltypes.Unicode, attname=sqltypes.Unicode)
+        result = connection.execute(t, {"table_oid": table_oid)
+
 
 Level 4, Object Relational Mapping
 ==================================

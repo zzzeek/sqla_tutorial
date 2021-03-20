@@ -515,6 +515,14 @@ pre {
   overflow: hidden;
 }
 
+div.tinycode > div > pre {
+    font-size: 0.3em;
+    line-height: 1.6em;
+    width: 60%;
+    margin: auto;
+}
+
+
 div.highlight-python {
   color: black;
   background: rgb(240, 240, 240);

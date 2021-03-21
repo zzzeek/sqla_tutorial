@@ -50,16 +50,20 @@ str(user_table.c.username == "spongebob")
 
 ### slide::
 # ColumnElements can be further combined to produce more ColumnElements
-
-print(
-    (user_table.c.username == "spongebob")
-    | (user_table.c.username == "patrick")
-)
-
-### slide::
-# OR and AND are available with |, &, or or_() and and_()
+# and_() and or_() for example provide the basic conjunctions of
+# AND and OR.
 
 from sqlalchemy import and_, or_
+
+print(
+    or_(
+        user_table.c.username == "spongebob",
+        user_table.c.username == "patrick"
+    )
+)
+
+### slide:: i
+
 
 print(
     and_(
@@ -74,15 +78,21 @@ print(
 ### slide::
 ### title:: More Operators
 
-# comparison operators
+# comparison operators =, !=, >, <, >=, =<, between()
 
-print(user_table.c.id > 5)
+print(and_(
+    user_table.c.id >= 5,
+    user_table.c.fullname.between('m', 'z'),
+    user_table.c.fullname != 'plankton'
+))
 
 ### slide:: i
 # Compare to None produces IS NULL / IS NOT NULL
 
-print(user_table.c.fullname == None)
-print(user_table.c.fullname != None)
+print(and_(
+    user_table.c.username != None,
+    user_table.c.fullname == None
+))
 
 ### slide::
 # Operators may also be type sensitive.
@@ -95,30 +105,27 @@ print(user_table.c.id + 5)
 
 print(user_table.c.fullname + " Jr.")
 
-### slide::
-# the IN operator will dynamically calculate bound parameter holders
-# at compile time.
-
-with engine.connect() as connection:
-    connection.execute(
-        select(
-            user_table.c.username.in_(["sandy", "squidward", "spongebob"])
-        )
-    ).all()
-
 ### slide:: p
-# "empty sets" for IN are available as well, which makes use of special
-# subqueries to provide a server-side "empty set"
+# the IN operator generates a special placeholder that will be filled
+# in when the statement is executed
+criteria = user_table.c.username.in_(["sandy", "squidward", "spongebob"])
+print(criteria)
 
-with engine.connect() as connection:
-    connection.execute(
-        select(
-            user_table.c.username.in_([])
-        )
-    ).all()
+### slide:: pi
+# When it is executed, bound parameters are generated as seen here
+print(criteria.compile(compile_kwargs={'render_postcompile': True}))
+
+### slide:: pi
+# when given an empty collection, the placeholder generates a SQL
+# subquery that represents an "empty set"
+
+criteria = user_table.c.username.in_([])
+print(criteria.compile(compile_kwargs={'render_postcompile': True}))
+
 
 
 ### slide:: p
+### title:: Working with INSERT and SELECT Statements
 # we can insert data using the insert() construct
 
 insert_stmt = user_table.insert().values(
@@ -129,8 +136,8 @@ with engine.begin() as connection:
     connection.execute(insert_stmt)
 
 ### slide:: p
-# insert() and update() against plain Python values normally generate their
-# VALUES/SET clauses from the list of parameters that are passed to execute().
+# The insert() statement, when not given values(), will generate the VALUES
+# clause based on the list of parameters that are passed to execute().
 
 with engine.begin() as connection:
     connection.execute(
@@ -151,49 +158,55 @@ with engine.begin() as connection:
 
 from sqlalchemy import select
 
-select_stmt = select(user_table.c.username, user_table.c.fullname).where(
-    user_table.c.username == "spongebob"
-)
-connection = engine.connect()
-
-result = connection.execute(select_stmt)
-for row in result:
-    print(row)
+with engine.connect() as connection:
+    select_stmt = (
+        select(user_table.c.username, user_table.c.fullname).
+        where(user_table.c.username == "spongebob")
+    )
+    result = connection.execute(select_stmt)
+    for row in result:
+        print(row)
 
 ### slide:: lp
 # select all columns from a table
 
-select_stmt = select(user_table)
-connection.execute(select_stmt).all()
+with engine.connect() as connection:
+    select_stmt = select(user_table)
+    connection.execute(select_stmt).all()
 
 ### slide:: lp
 # specify WHERE and ORDER BY
 
-select_stmt = select(user_table).where(
-    or_(
-        user_table.c.username == "spongebob",
-        user_table.c.username == "sandy",
-    )
-).order_by(user_table.c.username)
-connection.execute(select_stmt).all()
+with engine.connect() as connection:
+    select_stmt = select(user_table).where(
+        or_(
+            user_table.c.username == "spongebob",
+            user_table.c.username == "sandy",
+        )
+    ).order_by(user_table.c.username)
+    connection.execute(select_stmt).all()
 
 ### slide:: lp
 # specify multiple WHERE, will be joined by AND
 
-select_stmt = (
-    select(user_table)
-    .where(user_table.c.username == "spongebob")
-    .where(user_table.c.fullname == "Spongebob Squarepants")
-    .order_by(user_table.c.username)
-)
-connection.execute(select_stmt).all()
+with engine.connect() as connection:
+    select_stmt = (
+        select(user_table)
+        .where(user_table.c.username == "spongebob")
+        .where(user_table.c.fullname == "Spongebob Squarepants")
+        .order_by(user_table.c.username)
+    )
+    connection.execute(select_stmt).all()
 
 
 ### slide:: p
-# More Result methods.   In the engine chapter, we were introduced to
+### title:: More Result Methods
+# In the engine chapter, we were introduced to
 # .all() and .first().   Result also has most of what
 # previously was only in the ORM, such as the .one() and .one_or_none()
 # methods.
+
+connection = engine.connect()
 
 # the one() method returns exactly one row
 result = connection.execute(
@@ -240,31 +253,49 @@ for fullname in result.scalars("fullname"):
 
 
 ### slide:: p
-# an UPDATE, invoked with implicit "SET" clause
+### title:: Working with UPDATE and DELETE Statements
+# The update() construct is very similar to insert().  We can specify
+# values(), which here refers to the SET clause of the UPDATE statement
 
-update_stmt = (
-    user_table.update()
-    .where(user_table.c.username == "patrick")
-)
+with engine.begin() as connection:
+    update_stmt = (
+        user_table.update()
+        .values(fullname="Patrick Star")
+        .where(user_table.c.username == "patrick")
+    )
 
-result = connection.execute(update_stmt, {"fullname": "Patrick Star"})
+    result = connection.execute(update_stmt)
+
+### slide:: pi
+# Like INSERT, it can also generate the SET clause based on the given
+# parameters
+
+with engine.begin() as connection:
+    update_stmt = (
+        user_table.update()
+        .where(user_table.c.username == "patrick")
+    )
+
+    result = connection.execute(update_stmt, {"fullname": "Patrick Star"})
 
 ### slide:: p
-# update() uses the .values() method to explicitly indicate the SET clause.
-# It supports SQL expressions as well
+# the update().values() method has an extra capability in that it can
+# accommodate arbitrary SQL expressions as well
 
-update_stmt = user_table.update().values(
-    fullname=user_table.c.username + " " + user_table.c.fullname
-)
+with engine.begin() as connection:
+    update_stmt = user_table.update().values(
+        fullname=user_table.c.username + " " + user_table.c.fullname
+    )
 
-result = connection.execute(update_stmt)
+    result = connection.execute(update_stmt)
 
 ### slide:: p
 # and this is a DELETE
 
-delete_stmt = user_table.delete().where(user_table.c.username == "patrick")
+with engine.begin() as connection:
+    delete_stmt = user_table.delete().where(user_table.c.username == "patrick")
 
-result = connection.execute(delete_stmt)
+    result = connection.execute(delete_stmt)
 
 
 ### slide::

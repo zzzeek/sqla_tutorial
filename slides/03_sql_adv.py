@@ -1,5 +1,5 @@
 ### slide::
-### title:: Joins / Foreign Keys / Subqueries / CTEs
+### title:: Joins / Aliases / Subqueries / CTEs
 # create the same table as we used earlier..
 
 from sqlalchemy import MetaData, Table, Column
@@ -19,7 +19,7 @@ user_table = Table(
 from sqlalchemy import ForeignKey
 
 address_table = Table(
-    "address",
+    "email_address",
     metadata,
     Column("id", Integer, primary_key=True),
     Column("user_id", ForeignKey("user_account.id"), nullable=False),
@@ -73,6 +73,7 @@ from sqlalchemy import select
 connection = engine.connect()
 
 ### slide::
+### title:: SELECT from more than one table, joins
 # the select() construct will include in the FROM clause all
 # those tables that we mention in the columns clause or WHERE clause.
 # by default, they are separated by a comma.
@@ -82,7 +83,7 @@ stmt = select(user_table.c.username, address_table.c.email_address)
 print(stmt)
 
 
-### slide:: p
+### slide:: pi
 # however, selecting from multiple tables without relating them
 # to each other produces an effect known as the **cartesian product**.
 # SQLAlchemy will usually warn when this is detected during statement
@@ -127,6 +128,7 @@ stmt = select(
 connection.execute(stmt).all()
 
 ### slide:: p
+### title:: working with table aliases and subqueries
 # When a SELECT wants to refer to the same table more than once, a SQL
 # alias is used.  This is available using the  .alias() method, which
 # returns a unique Alias object representing that table with a particular
@@ -191,6 +193,7 @@ connection.execute(username_plus_count).all()
 
 
 ### slide::
+### title:: Common Table Expressions
 # joining to a subquery can also be achieved using a common table
 # expression, or CTE. By calling
 # cte() instead of subquery(), we get a CTE:

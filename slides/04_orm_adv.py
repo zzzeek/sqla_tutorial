@@ -33,7 +33,7 @@ from sqlalchemy import ForeignKey
 
 @mapper_registry.mapped
 class Address:
-    __tablename__ = "address"
+    __tablename__ = "email_address"
 
     id = Column(Integer, primary_key=True)
     email_address = Column(String, nullable=False)

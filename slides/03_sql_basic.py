@@ -2,7 +2,6 @@
 ### title:: SQL Expression Language
 # We begin with a Table object
 from sqlalchemy import MetaData, Table, Column, String, Integer
-from sqlalchemy import select
 
 metadata = MetaData()
 user_table = Table(
@@ -41,17 +40,20 @@ user_table.c.username == "spongebob"
 str(user_table.c.username == "spongebob")
 
 ### slide:: i
-# as we view these column expressions, keep in mind that literal values
-# like "spongebob" above are converted into **bound parameters*.  They
-# are not as visible but are not lost
-
-(user_table.c.username == "spongebob").compile().params
+# For more fine-grained inspection of the compilation process, the .compile()
+# method provides the compiled form of the statement.   This includes the
+# string statement itself, as well as the parameter values, which will
+# have been taken from the literal values present in the statement.
+compiled = (user_table.c.username == "spongebob").compile()
+compiled.string
+compiled.params
 
 
 ### slide::
-# ColumnElements can be further combined to produce more ColumnElements
-# and_() and or_() for example provide the basic conjunctions of
-# AND and OR.
+### title:: Building bigger SQL constructs.
+# ColumnElements are the basic building block of SQL statement objects.
+# To compose more complex criteria, and_() and or_() for example provide the
+# basic conjunctions of AND and OR.
 
 from sqlalchemy import and_, or_
 
@@ -71,7 +73,7 @@ print(
         or_(
             user_table.c.username == "spongebob",
             user_table.c.username == "patrick",
-        ),
+        )
     )
 )
 
@@ -283,8 +285,11 @@ with engine.begin() as connection:
 # accommodate arbitrary SQL expressions as well
 
 with engine.begin() as connection:
-    update_stmt = user_table.update().values(
-        fullname=user_table.c.username + " " + user_table.c.fullname
+    update_stmt = (
+        user_table.update().
+        values(
+            fullname=user_table.c.username + " " + user_table.c.fullname
+        )
     )
 
     result = connection.execute(update_stmt)

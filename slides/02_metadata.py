@@ -173,11 +173,11 @@ inspector.get_table_names()
 
 ### slide:: p
 # column information
-inspector.get_columns("address")
+inspector.get_columns("email_address")
 
 ### slide:: p
 # constraints
-inspector.get_foreign_keys("address")
+inspector.get_foreign_keys("email_address")
 
 
 ### slide:: p

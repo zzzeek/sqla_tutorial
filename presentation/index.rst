@@ -76,11 +76,14 @@ SQLAlchemy consists of the Core and the ORM
 SQLAlchemy - Core
 =================================
 
-* **Engine** - the front-facing entrypoint for database connections
-* **Dialect** - translates SQLAlchemy constructs for a specific kind of
-  database and database driver
-* **Connection Pool** - holds a collection of database connections in memory for
-  fast re-use.
+* **Engine** - a gateway to database connectivity, which provides:
+    * **Connection** - the interface to a database connection, which provides:
+    * **Result** - the interface to a database result
+* **Engine** maintains behind the scenes:
+    * **Dialect** - translates SQLAlchemy constructs for a specific kind of
+      database and database driver
+    * **Connection Pool** - holds a collection of database connections in memory for
+      fast re-use.
 * **SQL Expression Language** - Python constructs that represent SQL statements
 * **Schema / Types** - Python constructs that represent tables, columns,
   datatypes, and other DDL
